@@ -1,0 +1,68 @@
+---
+title: "Homework 1"
+output: html_notebook
+---
+
+First, let's set a seed for any functions that may involve randomness so we can reproduce the results. We do this so everytime we run a function with randomness (given the same arguments), the output will be the same.
+
+```{r, results='hide'}
+set.seed(27)
+```
+
+We can move on to creating a 5 by 10 matrix of random integers.
+
+```{r, results='hide'}
+random_integers <- matrix(sample(1:1000, 50, replace = TRUE), nrow = 5, ncol = 10)
+```
+
+Now we've got the matrix defined as `random_integers`, let's set the column names to the different 'conditions' and 'controls'. We can also do a similar process for naming the rows.
+
+```{r, results='hide'}
+colnames(random_integers) <- c("cond1", "cond2", "cond3", "cond4", "cond5", "ctrl1", "ctrl2", "ctrl3", "ctrl4", "ctrl5")
+rownames(random_integers) <- paste("gene", 1:5, sep="")
+```
+
+Now we've got our data formatted, we can move on to computing the fold change for each gene. To use `DESeq2`, we need to get over some configuration first since the `DESeqDataSetFromMatrix` function requires arguments beyond just the matrix from earlier.
+
+## Configuring DESeq2
+
+1. We need to create a data frame that contains information on the 'conditions' we're using (i.e., the "cond" and "ctrl" column names from `random_integers`).
+
+```{r, results='hide'}
+col_data <- data.frame(
+  condition = factor(rep(c("cond", "ctrl"), each = 5)),
+  row.names = colnames(random_integers)
+)
+```
+
+2. Now that we have the "metadata" of our dataset, we can create the `DESeqDataSet` object to run the log fold change calculations.
+
+```{r, results='hide'}
+dds <- DESeq2::DESeqDataSetFromMatrix(countData = random_integers, 
+                              colData = col_data, 
+                              design = ~ condition)
+```
+
+3. We can run the differential expression analysis by simply passing in our `DESeqDataSet` object to the `DESeq` function.
+
+```{r, results='hide'}
+dds <- DESeq2::DESeq(dds)
+```
+
+4. Given the results, we want to take the output from the previous function (which provides us with log2 fold change) and get to log fold change. Once we do the conversion, we can also add it to our `results` object to see the difference in expression in each gene.
+
+```{r, results='hide'}
+results <- DESeq2::results(dds)
+results$foldChange <- 2^results$log2FoldChange
+```
+
+## Results
+
+For clarity, we can create another data frame to output which genes have expression changes between control and the treatment.
+```{r}
+gene_fold_changes <- data.frame(
+    Gene = rownames(results),
+    FoldChange = results$foldChange
+)
+print(gene_fold_changes)
+```
