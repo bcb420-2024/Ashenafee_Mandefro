@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Ashenafee Mandefro" />
+
+<meta name="date" content="2024-02-13" />
+
+<title>Assignment 1</title>
+
+<script src="A1_Notebook_files/header-attrs-2.25/header-attrs.js"></script>
+<script src="A1_Notebook_files/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="A1_Notebook_files/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="A1_Notebook_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="A1_Notebook_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="A1_Notebook_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="A1_Notebook_files/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="A1_Notebook_files/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="A1_Notebook_files/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="A1_Notebook_files/navigation-1.1/tabsets.js"></script>
+<script src="A1_Notebook_files/navigation-1.1/codefolding.js"></script>
+<link href="A1_Notebook_files/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="A1_Notebook_files/pagedtable-1.1/js/pagedtable.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  background-color: #f8f8f8; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #204a87; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #8f5902; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #204a87; font-weight: bold; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+
+.sourceCode .row {
+  width: 100%;
+}
+.sourceCode {
+  overflow-x: auto;
+}
+.code-folding-btn {
+  margin-right: -30px;
+}
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">
+/* for pandoc --citeproc since 2.11 */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Assignment 1</h1>
+<h3 class="subtitle">Loading, Cleaning, Preprocessing, and Normalizing
+an RNASeq Dataset on Cannabidiol and SARS-CoV-2</h3>
+<h4 class="author">Ashenafee Mandefro</h4>
+<h4 class="date">02/13/2024</h4>
+
+</div>
+
+
+<div id="preface" class="section level2" number="0.1">
+<h2><span class="header-section-number">0.1</span> Preface</h2>
+<p>This Rmarkdown document details my steps in cleaning and
+preprocessing my chosen dataset from the NCBI’s <a
+href="https://www.ncbi.nlm.nih.gov/geo/">Gene Expression Omnibus
+(GEO)</a>. The dataset I chose is associated with <a
+href="https://www.science.org/doi/10.1126/sciadv.abi6110">“Cannabidiol
+Inhibits SARS-CoV-2 Replication through Induction of the Host ER Stress
+and Innate Immune Responses”</a>, with the dataset identifier being <a
+href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE168797">GSE168797</a>.</p>
+<p>In the process of my work here, I noticed that my dataset has already
+been normalized, despite running the pipeline with the two separate
+supplementary files given via GEO. Regardless, I have still gone over
+the steps I would do to normalize my dataset (i.e., had it not been
+normalized) and will compare my visualizations before and after
+“normalization” to verify that the dataset is indeed normalized. The
+authors had done their normalization using the <code>DESeq2</code>
+package, but I will be using the <code>edgeR</code> package for my
+normalization to compare/contrast.</p>
+</div>
+<div id="prerequisites" class="section level2" number="0.2">
+<h2><span class="header-section-number">0.2</span> Prerequisites</h2>
+<p>First we make sure that the packages we need are installed. Prior to
+installing, we check if the package already exists in the environment.
+If not, we install the package.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># Check if Biocondutor is installed</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">&quot;BiocManager&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>    <span class="fu">install.packages</span>(<span class="st">&quot;BiocManager&quot;</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="co"># Install GEOquery</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">&quot;GEOquery&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>    BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">&quot;GEOquery&quot;</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="co"># Install biomaRt</span></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">&quot;biomaRt&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>    BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">&quot;biomaRt&quot;</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a><span class="co"># Install knitr</span></span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">&quot;knitr&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a>    <span class="fu">install.packages</span>(<span class="st">&quot;knitr&quot;</span>)</span>
+<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a><span class="co"># Install data.table</span></span>
+<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">&quot;data.table&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a>    <span class="fu">install.packages</span>(<span class="st">&quot;data.table&quot;</span>)</span>
+<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a><span class="co"># Install edgeR</span></span>
+<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">&quot;edgeR&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a>    BiocManager<span class="sc">::</span><span class="fu">install</span>(<span class="st">&quot;edgeR&quot;</span>)</span></code></pre></div>
+</div>
+<div id="setup-information" class="section level2" number="0.3">
+<h2><span class="header-section-number">0.3</span> Setup
+Information</h2>
+<div id="loading-the-dataset" class="section level3" number="0.3.1">
+<h3><span class="header-section-number">0.3.1</span> Loading the
+dataset</h3>
+<p>Then before we move to cleaning the data, we’ll load it from GEO
+using <code>GEOquery</code>.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>dataset_geo_id <span class="ot">&lt;-</span> <span class="st">&quot;GSE168797&quot;</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>gse <span class="ot">&lt;-</span> GEOquery<span class="sc">::</span><span class="fu">getGEO</span>(dataset_geo_id, <span class="at">GSEMatrix =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+</div>
+<div id="platform-information" class="section level3" number="0.3.2">
+<h3><span class="header-section-number">0.3.2</span> Platform
+Information</h3>
+<p>Information on the platform the researchers used to get this data is
+also important and is listed below:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>current_gpl <span class="ot">&lt;-</span> <span class="fu">names</span>(GEOquery<span class="sc">::</span><span class="fu">GPLList</span>(gse))[<span class="dv">1</span>]</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>current_gpl_info <span class="ot">&lt;-</span> GEOquery<span class="sc">::</span><span class="fu">Meta</span>(GEOquery<span class="sc">::</span><span class="fu">getGEO</span>(current_gpl))</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co"># Print the data</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="fu">cat</span>(</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>    <span class="fu">c</span>(</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Platform title:</span><span class="sc">\t\t</span><span class="st">%s&quot;</span>, current_gpl_info<span class="sc">$</span>title),</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Submission data:</span><span class="sc">\t\t</span><span class="st">%s&quot;</span>, current_gpl_info<span class="sc">$</span>submission_date),</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Last update data:</span><span class="sc">\t</span><span class="st">%s&quot;</span>, current_gpl_info<span class="sc">$</span>last_update_date),</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Organism:</span><span class="sc">\t\t\t</span><span class="st">%s&quot;</span>, current_gpl_info<span class="sc">$</span>organism),</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Total GEO Datasets:</span><span class="sc">\t</span><span class="st">%s&quot;</span>, <span class="fu">length</span>(current_gpl_info<span class="sc">$</span>series_id)),</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Total GEO Samples:</span><span class="sc">\t</span><span class="st">%s&quot;</span>, <span class="fu">length</span>(current_gpl_info<span class="sc">$</span>sample_id))</span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>    ),</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>    <span class="at">sep =</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>)</span></code></pre></div>
+<pre><code>## Platform title:      Illumina NovaSeq 6000 (Homo sapiens)
+## Submission data:     Mar 02 2018
+## Last update data:    Nov 05 2018
+## Organism:            Homo sapiens
+## Total GEO Datasets:  12914
+## Total GEO Samples:   847368</code></pre>
+</div>
+<div id="supplementary-files" class="section level3" number="0.3.3">
+<h3><span class="header-section-number">0.3.3</span> Supplementary
+Files</h3>
+<p>Given the platform used to generate the data, we can now take a look
+and see which supplementary files were included with the GEO record for
+GSE168797.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Get the supplementary files</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>supplementary_files <span class="ot">&lt;-</span> GEOquery<span class="sc">::</span><span class="fu">getGEOSuppFiles</span>(dataset_geo_id, <span class="at">fetch_files =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co"># Get the file names prefixed with their number in the list</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>file_names <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;</span><span class="sc">\t</span><span class="st">&quot;</span>, <span class="fu">seq_along</span>(supplementary_files<span class="sc">$</span>fname), <span class="st">&quot;. &quot;</span>, supplementary_files<span class="sc">$</span>fname)</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co"># Print the data</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="fu">cat</span>(</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>    <span class="fu">c</span>(</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Total supplementary files:</span><span class="sc">\t</span><span class="st">%s&quot;</span>, <span class="fu">length</span>(supplementary_files)),</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Supplementary files:</span><span class="sc">\n</span><span class="st">%s&quot;</span>, <span class="fu">paste</span>(file_names, <span class="at">collapse =</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>))</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>    ),</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>    <span class="at">sep =</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>)</span></code></pre></div>
+<pre><code>## Total supplementary files:   2
+## Supplementary files:
+##  1. GSE168797_CBDV_raw_counts.txt.gz
+##  2. GSE168797_Raw_gene_counts_matrix.txt.gz</code></pre>
+</div>
+</div>
+<div id="data-cleaning-and-preprocessing" class="section level2"
+number="0.4">
+<h2><span class="header-section-number">0.4</span> Data Cleaning and
+Preprocessing</h2>
+<p>For our analysis, we will be working with the raw data (i.e., #2
+above). We can use <code>GEOquery</code> to download the supplementary
+file and then load it into R.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Specify the file to download and the download directory</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>file_to_download <span class="ot">&lt;-</span> supplementary_files<span class="sc">$</span>fname[<span class="dv">2</span>]</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>download_dir <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="fu">getwd</span>(), <span class="st">&quot;data&quot;</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co"># Check if the directory exists, if not, create it</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">dir.exists</span>(download_dir))</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>    <span class="fu">dir.create</span>(download_dir)</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co"># Check if the file exists, if not, download it</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>file_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(download_dir, dataset_geo_id, file_to_download)</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(file_path))</span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>    GEOquery<span class="sc">::</span><span class="fu">getGEOSuppFiles</span>(</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>        dataset_geo_id,</span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>        <span class="at">filter_regex =</span> file_to_download,</span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>        <span class="at">baseDir =</span> download_dir,</span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>        <span class="at">fetch_files =</span> <span class="cn">TRUE</span></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>    )</span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="co"># Remove any folder in the working directory named dataset_geo_id</span></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">dir.exists</span>(<span class="fu">file.path</span>(<span class="fu">getwd</span>(), dataset_geo_id)))</span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>    <span class="fu">unlink</span>(<span class="fu">file.path</span>(<span class="fu">getwd</span>(), dataset_geo_id), <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<div id="dataset-overview" class="section level3" number="0.4.1">
+<h3><span class="header-section-number">0.4.1</span> Dataset
+Overview</h3>
+<p>With the dataset downloaded, we can verify if it’s indeed the full
+raw dataset by checking some simple metadata/statistics of the file. One
+example would be to check the number of unique identifiers (i.e., the
+rows) in the dataset to see if it’s close to mirrorring the number of
+genes in the human genome.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># Load the dataset</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>dataset <span class="ot">&lt;-</span> <span class="fu">read.table</span>(</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>    <span class="fu">file.path</span>(download_dir, dataset_geo_id, file_to_download),</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>    <span class="at">header =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>    <span class="at">check.names =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>)</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="co"># Output number of rows and columns</span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="fu">cat</span>(</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>    <span class="fu">c</span>(</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Number of rows:</span><span class="sc">\t\t</span><span class="st">%s&quot;</span>, <span class="fu">nrow</span>(dataset)),</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Number of columns:</span><span class="sc">\t</span><span class="st">%s&quot;</span>, <span class="fu">ncol</span>(dataset))</span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>    ),</span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>    <span class="at">sep =</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>)</span></code></pre></div>
+<pre><code>## Number of rows:      57832
+## Number of columns:   13</code></pre>
+<p>With 57832 rows, that’s well over the number of genes in the human
+genome. This hints that the dataset contains information on multiple
+variants. Furthermore, within these rows, there are 0 duplicate gene
+identifiers.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="co"># Output the number of unique gene identifiers</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="fu">cat</span>(</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>    <span class="fu">c</span>(</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Number of unique gene identifiers:</span><span class="sc">\t</span><span class="st">%s&quot;</span>, <span class="fu">length</span>(<span class="fu">unique</span>(dataset<span class="sc">$</span>Gene))),</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Number of duplicate gene identifiers:</span><span class="sc">\t</span><span class="st">%s&quot;</span>, <span class="fu">sum</span>(<span class="fu">duplicated</span>(dataset<span class="sc">$</span>Gene)))</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>    ),</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>    <span class="at">sep =</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>)</span></code></pre></div>
+<pre><code>## Number of unique gene identifiers:   57832
+## Number of duplicate gene identifiers:    0</code></pre>
+</div>
+<div id="sample-metadata" class="section level3" number="0.4.2">
+<h3><span class="header-section-number">0.4.2</span> Sample
+Metadata</h3>
+<p>To understand what each sample/condition is within those columns, we
+must look into the metadata of each sample. We can use our initial
+<code>gse</code> object to get the metadata of the samples.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="co"># Create a data frame to store the metadata. Each row will represent a sample.</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>sample_metadata <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>    <span class="at">sample_id =</span> <span class="fu">character</span>(),</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>    <span class="at">title =</span> <span class="fu">character</span>(),</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>    <span class="at">organism =</span> <span class="fu">character</span>(),</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>    <span class="at">cell_line =</span> <span class="fu">character</span>(),</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>    <span class="at">infection =</span> <span class="fu">character</span>(),</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>    <span class="at">treatment =</span> <span class="fu">character</span>(),</span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a>    <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a>)</span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a>samples <span class="ot">&lt;-</span> gse<span class="sc">@</span>gsms</span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="co"># Get the sample metadata for each non-Gene column and add the metadata to a data frame.</span></span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>(<span class="fu">ncol</span>(dataset) <span class="sc">-</span> <span class="dv">1</span>)) {</span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a>    <span class="co"># Get the cell line, infection, and treatment from the characteristics</span></span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a>    cell_line <span class="ot">&lt;-</span> gse<span class="sc">@</span>gsms[[i]]<span class="sc">@</span>header<span class="sc">$</span>characteristics_ch1[<span class="dv">1</span>]</span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a>    infection <span class="ot">&lt;-</span> gse<span class="sc">@</span>gsms[[i]]<span class="sc">@</span>header<span class="sc">$</span>characteristics_ch1[<span class="dv">2</span>]</span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a>    treatment <span class="ot">&lt;-</span> gse<span class="sc">@</span>gsms[[i]]<span class="sc">@</span>header<span class="sc">$</span>characteristics_ch1[<span class="dv">3</span>]</span>
+<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a></span>
+<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a>    <span class="co"># Add the metadata to the data frame</span></span>
+<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a>    sample_metadata <span class="ot">&lt;-</span> <span class="fu">rbind</span>(</span>
+<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a>        sample_metadata,</span>
+<span id="cb12-24"><a href="#cb12-24" tabindex="-1"></a>        <span class="fu">data.frame</span>(</span>
+<span id="cb12-25"><a href="#cb12-25" tabindex="-1"></a>            <span class="at">sample_id =</span> <span class="fu">colnames</span>(dataset)[i <span class="sc">+</span> <span class="dv">1</span>],</span>
+<span id="cb12-26"><a href="#cb12-26" tabindex="-1"></a>            <span class="at">title =</span> gse<span class="sc">@</span>gsms[[i]]<span class="sc">@</span>header<span class="sc">$</span>title,</span>
+<span id="cb12-27"><a href="#cb12-27" tabindex="-1"></a>            <span class="at">organism =</span> gse<span class="sc">@</span>gsms[[i]]<span class="sc">@</span>header<span class="sc">$</span>organism_ch1,</span>
+<span id="cb12-28"><a href="#cb12-28" tabindex="-1"></a>            <span class="at">cell_line =</span> cell_line,</span>
+<span id="cb12-29"><a href="#cb12-29" tabindex="-1"></a>            <span class="at">infection =</span> infection,</span>
+<span id="cb12-30"><a href="#cb12-30" tabindex="-1"></a>            <span class="at">treatment =</span> treatment,</span>
+<span id="cb12-31"><a href="#cb12-31" tabindex="-1"></a>            <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb12-32"><a href="#cb12-32" tabindex="-1"></a>        )</span>
+<span id="cb12-33"><a href="#cb12-33" tabindex="-1"></a>    )</span>
+<span id="cb12-34"><a href="#cb12-34" tabindex="-1"></a>}</span>
+<span id="cb12-35"><a href="#cb12-35" tabindex="-1"></a></span>
+<span id="cb12-36"><a href="#cb12-36" tabindex="-1"></a><span class="co"># Remove redundant text from the characteristics in the metadata</span></span>
+<span id="cb12-37"><a href="#cb12-37" tabindex="-1"></a>sample_metadata<span class="sc">$</span>cell_line <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">&quot;cell line: &quot;</span>, <span class="st">&quot;&quot;</span>, sample_metadata<span class="sc">$</span>cell_line)</span>
+<span id="cb12-38"><a href="#cb12-38" tabindex="-1"></a>sample_metadata<span class="sc">$</span>infection <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">&quot;infection: &quot;</span>, <span class="st">&quot;&quot;</span>, sample_metadata<span class="sc">$</span>infection)</span>
+<span id="cb12-39"><a href="#cb12-39" tabindex="-1"></a>sample_metadata<span class="sc">$</span>treatment <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">&quot;treatment: &quot;</span>, <span class="st">&quot;&quot;</span>, sample_metadata<span class="sc">$</span>treatment)</span>
+<span id="cb12-40"><a href="#cb12-40" tabindex="-1"></a></span>
+<span id="cb12-41"><a href="#cb12-41" tabindex="-1"></a><span class="co"># Remove &lt;sample_id&gt; and set the row names to the sample_id</span></span>
+<span id="cb12-42"><a href="#cb12-42" tabindex="-1"></a><span class="fu">rownames</span>(sample_metadata) <span class="ot">&lt;-</span> sample_metadata<span class="sc">$</span>sample_id</span>
+<span id="cb12-43"><a href="#cb12-43" tabindex="-1"></a>sample_metadata<span class="sc">$</span>sample_id <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb12-44"><a href="#cb12-44" tabindex="-1"></a></span>
+<span id="cb12-45"><a href="#cb12-45" tabindex="-1"></a><span class="co"># Display using kable</span></span>
+<span id="cb12-46"><a href="#cb12-46" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(sample_metadata)</span></code></pre></div>
+<table>
+<colgroup>
+<col width="11%" />
+<col width="15%" />
+<col width="11%" />
+<col width="31%" />
+<col width="14%" />
+<col width="14%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">title</th>
+<th align="left">organism</th>
+<th align="left">cell_line</th>
+<th align="left">infection</th>
+<th align="left">treatment</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">CBD_infect.1</td>
+<td align="left">A549_CBD_infect-1</td>
+<td align="left">Homo sapiens</td>
+<td align="left">A549 cells with ACE2 overexpression</td>
+<td align="left">SARS-CoV-2 MOI 3</td>
+<td align="left">Cannabidiol 10uM</td>
+</tr>
+<tr class="even">
+<td align="left">CBD_infect.2</td>
+<td align="left">A549_CBD_infect-2</td>
+<td align="left">Homo sapiens</td>
+<td align="left">A549 cells with ACE2 overexpression</td>
+<td align="left">SARS-CoV-2 MOI 3</td>
+<td align="left">Cannabidiol 10uM</td>
+</tr>
+<tr class="odd">
+<td align="left">CBD_infect.3</td>
+<td align="left">A549_CBD_infect-3</td>
+<td align="left">Homo sapiens</td>
+<td align="left">A549 cells with ACE2 overexpression</td>
+<td align="left">SARS-CoV-2 MOI 3</td>
+<td align="left">Cannabidiol 10uM</td>
+</tr>
+<tr class="even">
+<td align="left">Veh_infect.1</td>
+<td align="left">A549_Veh_infect-1</td>
+<td align="left">Homo sapiens</td>
+<td align="left">A549 cells with ACE2 overexpression</td>
+<td align="left">SARS-CoV-2 MOI 3</td>
+<td align="left">DMSO</td>
+</tr>
+<tr class="odd">
+<td align="left">Veh_infect.2</td>
+<td align="left">A549_Veh_infect-2</td>
+<td align="left">Homo sapiens</td>
+<td align="left">A549 cells with ACE2 overexpression</td>
+<td align="left">SARS-CoV-2 MOI 3</td>
+<td align="left">DMSO</td>
+</tr>
+<tr class="even">
+<td align="left">Veh_infect.3</td>
+<td align="left">A549_Veh_infect-3</td>
+<td align="left">Homo sapiens</td>
+<td align="left">A549 cells with ACE2 overexpression</td>
+<td align="left">SARS-CoV-2 MOI 3</td>
+<td align="left">DMSO</td>
+</tr>
+<tr class="odd">
+<td align="left">CBD_mock.1</td>
+<td align="left">A549_CBD_mock-1</td>
+<td align="left">Homo sapiens</td>
+<td align="left">A549 cells with ACE2 overexpression</td>
+<td align="left">Mock</td>
+<td align="left">Cannabidiol 10uM</td>
+</tr>
+<tr class="even">
+<td align="left">CBD_mock.2</td>
+<td align="left">A549_CBD_mock-2</td>
+<td align="left">Homo sapiens</td>
+<td align="left">A549 cells with ACE2 overexpression</td>
+<td align="left">Mock</td>
+<td align="left">Cannabidiol 10uM</td>
+</tr>
+<tr class="odd">
+<td align="left">CBD_mock.3</td>
+<td align="left">A549_CBD_mock-3</td>
+<td align="left">Homo sapiens</td>
+<td align="left">A549 cells with ACE2 overexpression</td>
+<td align="left">Mock</td>
+<td align="left">Cannabidiol 10uM</td>
+</tr>
+<tr class="even">
+<td align="left">Veh_mock.1</td>
+<td align="left">A549_Veh_mock-1</td>
+<td align="left">Homo sapiens</td>
+<td align="left">A549 cells with ACE2 overexpression</td>
+<td align="left">Mock</td>
+<td align="left">DMSO</td>
+</tr>
+<tr class="odd">
+<td align="left">Veh_mock.2</td>
+<td align="left">A549_Veh_mock-2</td>
+<td align="left">Homo sapiens</td>
+<td align="left">A549 cells with ACE2 overexpression</td>
+<td align="left">Mock</td>
+<td align="left">DMSO</td>
+</tr>
+<tr class="even">
+<td align="left">Veh_mock.3</td>
+<td align="left">A549_Veh_mock-3</td>
+<td align="left">Homo sapiens</td>
+<td align="left">A549 cells with ACE2 overexpression</td>
+<td align="left">Mock</td>
+<td align="left">DMSO</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="cleaning-the-dataset" class="section level3" number="0.4.3">
+<h3><span class="header-section-number">0.4.3</span> Cleaning the
+Dataset</h3>
+<div id="mapping-the-ids-to-gene-symbols" class="section level4"
+number="0.4.3.1">
+<h4><span class="header-section-number">0.4.3.1</span> Mapping the IDs
+to Gene Symbols</h4>
+<p>Before we move to the next step, we need to map the gene identifiers
+to gene symbols. We can use the <code>biomaRt</code> package to do
+this.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="co"># Set up the mapping using the bimap interfaces</span></span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>ensembl <span class="ot">&lt;-</span> biomaRt<span class="sc">::</span><span class="fu">useEnsembl</span>(<span class="at">biomart =</span> <span class="st">&quot;ensembl&quot;</span>, <span class="at">dataset =</span> <span class="st">&quot;hsapiens_gene_ensembl&quot;</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>gene_ids <span class="ot">&lt;-</span> <span class="fu">unique</span>(dataset<span class="sc">$</span>Gene)</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="co"># Remove the version number from the gene identifiers</span></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>gene_ids <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">&quot;</span><span class="sc">\\</span><span class="st">..*&quot;</span>, <span class="st">&quot;&quot;</span>, gene_ids)</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a><span class="co"># Map the gene identifiers to gene symbols</span></span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>gene_mapping <span class="ot">&lt;-</span> biomaRt<span class="sc">::</span><span class="fu">getBM</span>(</span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a>    <span class="at">attributes =</span> <span class="fu">c</span>(<span class="st">&quot;ensembl_gene_id&quot;</span>, <span class="st">&quot;external_gene_name&quot;</span>),</span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a>    <span class="at">filters =</span> <span class="st">&quot;ensembl_gene_id&quot;</span>,</span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a>    <span class="at">values =</span> gene_ids,</span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a>    <span class="at">mart =</span> ensembl</span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a>)</span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a></span>
+<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a><span class="co"># Print the first few rows of the mapping</span></span>
+<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(gene_mapping))</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">ensembl_gene_id</th>
+<th align="left">external_gene_name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">ENSG00000000003</td>
+<td align="left">TSPAN6</td>
+</tr>
+<tr class="even">
+<td align="left">ENSG00000000005</td>
+<td align="left">TNMD</td>
+</tr>
+<tr class="odd">
+<td align="left">ENSG00000000419</td>
+<td align="left">DPM1</td>
+</tr>
+<tr class="even">
+<td align="left">ENSG00000000457</td>
+<td align="left">SCYL3</td>
+</tr>
+<tr class="odd">
+<td align="left">ENSG00000000460</td>
+<td align="left">FIRRM</td>
+</tr>
+<tr class="even">
+<td align="left">ENSG00000000938</td>
+<td align="left">FGR</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="co"># Modify the dataset to rename the current &#39;Gene&#39; column to &#39;Ensembl ID&#39;</span></span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a><span class="fu">colnames</span>(dataset)[<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="st">&quot;Ensembl ID&quot;</span></span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a><span class="co"># Add a column to the dataset for the gene symbols</span></span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>dataset<span class="sc">$</span>Gene <span class="ot">&lt;-</span> gene_mapping<span class="sc">$</span>external_gene_name[<span class="fu">match</span>(gene_ids, gene_mapping<span class="sc">$</span>ensembl_gene_id)]</span></code></pre></div>
+<p>We’ve mapped the Ensembl identifiers to gene symbols in our main
+<code>dataset</code> object. We’ll now check to see how many of the
+identifiers correctly mapped to a gene symbol.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>num_unique_gene_symbols <span class="ot">&lt;-</span> <span class="fu">length</span>(<span class="fu">unique</span>(dataset<span class="sc">$</span>Gene))</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>num_na_gene_symbols <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(dataset<span class="sc">$</span>Gene))</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>num_duplicate_gene_symbols <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">duplicated</span>(dataset<span class="sc">$</span>Gene)) <span class="sc">-</span> num_na_gene_symbols</span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a><span class="co"># Output the number of unique gene symbols</span></span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a><span class="fu">cat</span>(</span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a>    <span class="fu">c</span>(</span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Number of unique gene symbols:</span><span class="sc">\t\t\t</span><span class="st">%s&quot;</span>, num_unique_gene_symbols),</span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Number of NA gene symbols:</span><span class="sc">\t\t\t</span><span class="st">%s&quot;</span>, num_na_gene_symbols),</span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Number of duplicate (non-NA) gene symbols:</span><span class="sc">\t</span><span class="st">%s&quot;</span>, num_duplicate_gene_symbols)</span>
+<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a>    ),</span>
+<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a>    <span class="at">sep =</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span></span>
+<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a>)</span></code></pre></div>
+<pre><code>## Number of unique gene symbols:           38754
+## Number of NA gene symbols:           5831
+## Number of duplicate (non-NA) gene symbols:   13247</code></pre>
+</div>
+<div id="handling-na-gene-symbols" class="section level4"
+number="0.4.3.2">
+<h4><span class="header-section-number">0.4.3.2</span> Handling NA Gene
+Symbols</h4>
+<p>Since there’s a handful of gene identifiers that didn’t map to a gene
+symbol, this elicits further investigation. Taking some of these NA
+identifiers at random, we can query the Ensembl database manually
+(through the <a href="https://useast.ensembl.org/index.html">web
+interface</a>) to see what they’re returning.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="co"># Set a seed for reproducibility</span></span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a><span class="co"># Get a random sample of 5 NA gene identifiers</span></span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a>na_gene_ids <span class="ot">&lt;-</span> gene_ids[<span class="fu">is.na</span>(dataset<span class="sc">$</span>Gene)]</span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a>na_gene_ids_sample <span class="ot">&lt;-</span> <span class="fu">sample</span>(na_gene_ids, <span class="dv">5</span>)</span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a></span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a><span class="co"># Print the sample</span></span>
+<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a><span class="fu">cat</span>(</span>
+<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a>    <span class="fu">c</span>(</span>
+<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a>        <span class="st">&quot;Random sample of NA gene identifiers:&quot;</span>,</span>
+<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a>        <span class="fu">paste0</span>(<span class="st">&quot;</span><span class="sc">\t</span><span class="st">&quot;</span>, na_gene_ids_sample)</span>
+<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a>    ),</span>
+<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a>    <span class="at">sep =</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span></span>
+<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a>)</span></code></pre></div>
+<pre><code>## Random sample of NA gene identifiers:
+##  ENSG00000238605
+##  ENSG00000238690
+##  ENSG00000237133
+##  ENSG00000203471
+##  ENSG00000264489</code></pre>
+<p>From the random sample, all the identifiers return the same output
+from Ensembl in that they were part of an older version of the database.
+Before proceeding with our analysis, we will drop these NA identifiers
+from the dataset under the assumption that newer versions are available
+(and if present in our dataset, mapped to a gene symbol).</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="co"># Store the removed rows in a separate object</span></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>removed_rows <span class="ot">&lt;-</span> dataset[<span class="fu">is.na</span>(dataset<span class="sc">$</span>Gene), ]</span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a><span class="co"># Remove the rows with NA gene symbols</span></span>
+<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a>dataset <span class="ot">&lt;-</span> dataset[<span class="sc">!</span><span class="fu">is.na</span>(dataset<span class="sc">$</span>Gene), ]</span>
+<span id="cb19-6"><a href="#cb19-6" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" tabindex="-1"></a><span class="co"># Output the number of rows and columns</span></span>
+<span id="cb19-8"><a href="#cb19-8" tabindex="-1"></a><span class="fu">cat</span>(</span>
+<span id="cb19-9"><a href="#cb19-9" tabindex="-1"></a>    <span class="fu">c</span>(</span>
+<span id="cb19-10"><a href="#cb19-10" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Number of rows after removing NA gene symbols:</span><span class="sc">\t</span><span class="st">%s&quot;</span>, <span class="fu">nrow</span>(dataset)),</span>
+<span id="cb19-11"><a href="#cb19-11" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Number of columns:</span><span class="sc">\t\t\t\t\t</span><span class="st">%s&quot;</span>, <span class="fu">ncol</span>(dataset))</span>
+<span id="cb19-12"><a href="#cb19-12" tabindex="-1"></a>    ),</span>
+<span id="cb19-13"><a href="#cb19-13" tabindex="-1"></a>    <span class="at">sep =</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span></span>
+<span id="cb19-14"><a href="#cb19-14" tabindex="-1"></a>)</span></code></pre></div>
+<pre><code>## Number of rows after removing NA gene symbols:   52001
+## Number of columns:                   14</code></pre>
+</div>
+<div id="handling-entries-with-empty-gene-symbols"
+class="section level4" number="0.4.3.3">
+<h4><span class="header-section-number">0.4.3.3</span> Handling Entries
+with Empty Gene Symbols</h4>
+<p>For identifiers that weren’t successfully mapped to a symbol (i.e.,
+an empty gene symbol), we will also remove these from the dataset.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a><span class="co"># Count the number of rows with empty gene symbols</span></span>
+<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a>num_empty_gene_symbols <span class="ot">&lt;-</span> <span class="fu">sum</span>(dataset<span class="sc">$</span>Gene <span class="sc">==</span> <span class="st">&quot;&quot;</span>)</span>
+<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a><span class="co"># Remove the rows with empty gene symbols</span></span>
+<span id="cb21-5"><a href="#cb21-5" tabindex="-1"></a>dataset <span class="ot">&lt;-</span> dataset[dataset<span class="sc">$</span>Gene <span class="sc">!=</span> <span class="st">&quot;&quot;</span>, ]</span>
+<span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a><span class="co"># Output the number of rows and columns</span></span>
+<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a><span class="fu">cat</span>(</span>
+<span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a>    <span class="fu">c</span>(</span>
+<span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Number of rows after removing rows with empty gene symbols:</span><span class="sc">\t</span><span class="st">%s&quot;</span>, <span class="fu">nrow</span>(dataset)),</span>
+<span id="cb21-11"><a href="#cb21-11" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Number of columns:</span><span class="sc">\t\t\t\t\t\t</span><span class="st">%s&quot;</span>, <span class="fu">ncol</span>(dataset))</span>
+<span id="cb21-12"><a href="#cb21-12" tabindex="-1"></a>    ),</span>
+<span id="cb21-13"><a href="#cb21-13" tabindex="-1"></a>    <span class="at">sep =</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span></span>
+<span id="cb21-14"><a href="#cb21-14" tabindex="-1"></a>)</span></code></pre></div>
+<pre><code>## Number of rows after removing rows with empty gene symbols:  39649
+## Number of columns:                       14</code></pre>
+</div>
+<div id="handling-entries-with-0-expression" class="section level4"
+number="0.4.3.4">
+<h4><span class="header-section-number">0.4.3.4</span> Handling Entries
+with 0 Expression</h4>
+<p>Another pre-processing step we should handle before looking into
+duplicate symbols is to check for rows with 0 expression across all
+samples. We can do this by summing the expression values for each row
+and counting the number of rows with a sum of 0.</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a><span class="co"># Get the sum of expression values for each row</span></span>
+<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a>row_sums <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(dataset[, <span class="dv">2</span><span class="sc">:</span>(<span class="fu">ncol</span>(dataset) <span class="sc">-</span> <span class="dv">1</span>)])</span>
+<span id="cb23-3"><a href="#cb23-3" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" tabindex="-1"></a><span class="co"># Count the number of rows with 0 expression across all samples</span></span>
+<span id="cb23-5"><a href="#cb23-5" tabindex="-1"></a>num_zero_expression <span class="ot">&lt;-</span> <span class="fu">sum</span>(row_sums <span class="sc">==</span> <span class="dv">0</span>)</span>
+<span id="cb23-6"><a href="#cb23-6" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" tabindex="-1"></a><span class="co"># Output the number of rows with 0 expression across all samples</span></span>
+<span id="cb23-8"><a href="#cb23-8" tabindex="-1"></a><span class="fu">cat</span>(</span>
+<span id="cb23-9"><a href="#cb23-9" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">&quot;Number of rows with 0 expression across all samples:</span><span class="sc">\t</span><span class="st">%s&quot;</span>, num_zero_expression)</span>
+<span id="cb23-10"><a href="#cb23-10" tabindex="-1"></a>)</span></code></pre></div>
+<pre><code>## Number of rows with 0 expression across all samples: 9301</code></pre>
+<p>Given the result, we will remove these rows from the dataset.</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a><span class="co"># Remove the rows with 0 expression across all samples</span></span>
+<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a>dataset <span class="ot">&lt;-</span> dataset[row_sums <span class="sc">!=</span> <span class="dv">0</span>, ]</span>
+<span id="cb25-3"><a href="#cb25-3" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" tabindex="-1"></a><span class="co"># Output the number of rows and columns</span></span>
+<span id="cb25-5"><a href="#cb25-5" tabindex="-1"></a><span class="fu">cat</span>(</span>
+<span id="cb25-6"><a href="#cb25-6" tabindex="-1"></a>    <span class="fu">c</span>(</span>
+<span id="cb25-7"><a href="#cb25-7" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Number of rows after removing rows with 0 expression:</span><span class="sc">\t</span><span class="st">%s&quot;</span>, <span class="fu">nrow</span>(dataset)),</span>
+<span id="cb25-8"><a href="#cb25-8" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Number of columns:</span><span class="sc">\t\t\t\t\t</span><span class="st">%s&quot;</span>, <span class="fu">ncol</span>(dataset))</span>
+<span id="cb25-9"><a href="#cb25-9" tabindex="-1"></a>    ),</span>
+<span id="cb25-10"><a href="#cb25-10" tabindex="-1"></a>    <span class="at">sep =</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span></span>
+<span id="cb25-11"><a href="#cb25-11" tabindex="-1"></a>)</span></code></pre></div>
+<pre><code>## Number of rows after removing rows with 0 expression:    30348
+## Number of columns:                   14</code></pre>
+</div>
+<div id="handling-duplicate-gene-symbols" class="section level4"
+number="0.4.3.5">
+<h4><span class="header-section-number">0.4.3.5</span> Handling
+Duplicate Gene Symbols</h4>
+<p>Now with only our (presumed) valid/relevant expression values in the
+dataset, we should look to see if any of them are duplicated.</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" tabindex="-1"></a><span class="co"># Identify duplicate gene symbols</span></span>
+<span id="cb27-2"><a href="#cb27-2" tabindex="-1"></a>duplicate_gene_symbols <span class="ot">&lt;-</span> <span class="fu">unique</span>(dataset<span class="sc">$</span>Gene[<span class="fu">duplicated</span>(dataset<span class="sc">$</span>Gene)])</span>
+<span id="cb27-3"><a href="#cb27-3" tabindex="-1"></a></span>
+<span id="cb27-4"><a href="#cb27-4" tabindex="-1"></a><span class="co"># Output how many duplicate gene symbols there are</span></span>
+<span id="cb27-5"><a href="#cb27-5" tabindex="-1"></a><span class="fu">cat</span>(</span>
+<span id="cb27-6"><a href="#cb27-6" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">&quot;Number of duplicate gene symbols:</span><span class="sc">\t</span><span class="st">%s&quot;</span>, <span class="fu">length</span>(duplicate_gene_symbols))</span>
+<span id="cb27-7"><a href="#cb27-7" tabindex="-1"></a>)</span></code></pre></div>
+<pre><code>## Number of duplicate gene symbols:    26</code></pre>
+<p>Given the small number of duplicate gene symbols, we can combine
+their counts in a new dataframe that will forego the
+<code>Ensembl ID</code> column and instead have the gene symbols as the
+row names.</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" tabindex="-1"></a><span class="co"># Subset all the rows from &lt;dataset&gt; with the duplicate gene symbols</span></span>
+<span id="cb29-2"><a href="#cb29-2" tabindex="-1"></a>duplicate_entries <span class="ot">&lt;-</span> dataset[dataset<span class="sc">$</span>Gene <span class="sc">%in%</span> duplicate_gene_symbols, ]</span>
+<span id="cb29-3"><a href="#cb29-3" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" tabindex="-1"></a><span class="co"># Specify the columns to aggregate</span></span>
+<span id="cb29-5"><a href="#cb29-5" tabindex="-1"></a>cols_to_aggregate <span class="ot">&lt;-</span> <span class="fu">names</span>(duplicate_entries)[<span class="dv">2</span><span class="sc">:</span>(<span class="fu">ncol</span>(duplicate_entries) <span class="sc">-</span> <span class="dv">1</span>)]</span>
+<span id="cb29-6"><a href="#cb29-6" tabindex="-1"></a></span>
+<span id="cb29-7"><a href="#cb29-7" tabindex="-1"></a><span class="co"># Create a formula for aggregation</span></span>
+<span id="cb29-8"><a href="#cb29-8" tabindex="-1"></a>agg_formula <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="fu">paste</span>(<span class="st">&quot; ~ Gene&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;&quot;</span>))</span>
+<span id="cb29-9"><a href="#cb29-9" tabindex="-1"></a></span>
+<span id="cb29-10"><a href="#cb29-10" tabindex="-1"></a><span class="co"># Combine the counts of the duplicate gene symbols</span></span>
+<span id="cb29-11"><a href="#cb29-11" tabindex="-1"></a>combined_dupe_counts <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(duplicate_entries[, cols_to_aggregate], <span class="at">by =</span> <span class="fu">list</span>(duplicate_entries<span class="sc">$</span>Gene), <span class="at">FUN =</span> sum)</span>
+<span id="cb29-12"><a href="#cb29-12" tabindex="-1"></a></span>
+<span id="cb29-13"><a href="#cb29-13" tabindex="-1"></a><span class="co"># Set the row names</span></span>
+<span id="cb29-14"><a href="#cb29-14" tabindex="-1"></a><span class="fu">rownames</span>(combined_dupe_counts) <span class="ot">&lt;-</span> combined_dupe_counts<span class="sc">$</span><span class="st">`</span><span class="at">Group.1</span><span class="st">`</span></span>
+<span id="cb29-15"><a href="#cb29-15" tabindex="-1"></a>combined_dupe_counts<span class="sc">$</span><span class="st">`</span><span class="at">Group.1</span><span class="st">`</span> <span class="ot">&lt;-</span> <span class="cn">NULL</span></span></code></pre></div>
+</div>
+<div id="combining-the-counts" class="section level4" number="0.4.3.6">
+<h4><span class="header-section-number">0.4.3.6</span> Combining the
+Counts</h4>
+<p>We can now combine the counts of the duplicate gene symbols in the
+main dataset.</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" tabindex="-1"></a><span class="co"># Create a new dataframe that duplicates &lt;dataset&gt; minus the duplicate gene symbols</span></span>
+<span id="cb30-2"><a href="#cb30-2" tabindex="-1"></a>dataset_no_dupes <span class="ot">&lt;-</span> dataset[<span class="sc">!</span>dataset<span class="sc">$</span>Gene <span class="sc">%in%</span> duplicate_gene_symbols, ]</span>
+<span id="cb30-3"><a href="#cb30-3" tabindex="-1"></a></span>
+<span id="cb30-4"><a href="#cb30-4" tabindex="-1"></a><span class="co"># Set the row names</span></span>
+<span id="cb30-5"><a href="#cb30-5" tabindex="-1"></a><span class="fu">rownames</span>(dataset_no_dupes) <span class="ot">&lt;-</span> dataset_no_dupes<span class="sc">$</span>Gene</span>
+<span id="cb30-6"><a href="#cb30-6" tabindex="-1"></a>dataset_no_dupes<span class="sc">$</span>Gene <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb30-7"><a href="#cb30-7" tabindex="-1"></a></span>
+<span id="cb30-8"><a href="#cb30-8" tabindex="-1"></a><span class="co"># Remove the Ensembl ID column</span></span>
+<span id="cb30-9"><a href="#cb30-9" tabindex="-1"></a>dataset_no_dupes<span class="sc">$</span><span class="st">`</span><span class="at">Ensembl ID</span><span class="st">`</span> <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb30-10"><a href="#cb30-10" tabindex="-1"></a></span>
+<span id="cb30-11"><a href="#cb30-11" tabindex="-1"></a><span class="co"># Combine the counts of the duplicate gene symbols</span></span>
+<span id="cb30-12"><a href="#cb30-12" tabindex="-1"></a>combined_counts <span class="ot">&lt;-</span> <span class="fu">rbind</span>(dataset_no_dupes, combined_dupe_counts)</span></code></pre></div>
+</div>
+<div id="removing-low-count-genes" class="section level4"
+number="0.4.3.7">
+<h4><span class="header-section-number">0.4.3.7</span> Removing Low
+Count Genes</h4>
+<p>We want to assess the condition where cells have been infected with
+<code>SARS-CoV-2</code>. Within this subset, we will examine the effects
+of <code>Cannabidiol 10uM</code> treatment versus the control
+(<code>DMSO</code>).</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" tabindex="-1"></a>sample_type_dt <span class="ot">&lt;-</span> data.table<span class="sc">::</span><span class="fu">data.table</span>(sample_metadata)</span>
+<span id="cb31-2"><a href="#cb31-2" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(sample_type_dt[, .(<span class="at">count =</span> .N), <span class="at">by =</span> sample_metadata<span class="sc">$</span>infection])</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">sample_metadata</th>
+<th align="right">count</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">SARS-CoV-2 MOI 3</td>
+<td align="right">6</td>
+</tr>
+<tr class="even">
+<td align="left">Mock</td>
+<td align="right">6</td>
+</tr>
+</tbody>
+</table>
+<p>Since we have 6 samples for each of our conditions, we will remove
+genes that do not have at least 1 cpm (counts per million) in at least 6
+samples. We will use the <code>edgeR</code> package to do this.</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" tabindex="-1"></a>min_num_samples <span class="ot">&lt;-</span> <span class="dv">6</span></span>
+<span id="cb32-2"><a href="#cb32-2" tabindex="-1"></a></span>
+<span id="cb32-3"><a href="#cb32-3" tabindex="-1"></a><span class="co"># Duplicate the cleaned dataset without rownames</span></span>
+<span id="cb32-4"><a href="#cb32-4" tabindex="-1"></a>cleaned_dataset_no_rownames <span class="ot">&lt;-</span> combined_counts</span>
+<span id="cb32-5"><a href="#cb32-5" tabindex="-1"></a><span class="fu">rownames</span>(cleaned_dataset_no_rownames) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb32-6"><a href="#cb32-6" tabindex="-1"></a></span>
+<span id="cb32-7"><a href="#cb32-7" tabindex="-1"></a><span class="co"># Remove genes with low counts</span></span>
+<span id="cb32-8"><a href="#cb32-8" tabindex="-1"></a>keep <span class="ot">&lt;-</span> edgeR<span class="sc">::</span><span class="fu">cpm</span>(cleaned_dataset_no_rownames <span class="sc">&gt;</span> <span class="dv">1</span>) <span class="sc">&gt;=</span> min_num_samples</span>
+<span id="cb32-9"><a href="#cb32-9" tabindex="-1"></a>keep_sums <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(keep)</span>
+<span id="cb32-10"><a href="#cb32-10" tabindex="-1"></a>keep <span class="ot">&lt;-</span> keep_sums <span class="sc">&gt;=</span> min_num_samples</span>
+<span id="cb32-11"><a href="#cb32-11" tabindex="-1"></a>cleaned_dataset <span class="ot">&lt;-</span> combined_counts[keep, ]</span>
+<span id="cb32-12"><a href="#cb32-12" tabindex="-1"></a></span>
+<span id="cb32-13"><a href="#cb32-13" tabindex="-1"></a><span class="co"># Save the cleaned dataset to an Rda</span></span>
+<span id="cb32-14"><a href="#cb32-14" tabindex="-1"></a><span class="fu">save</span>(cleaned_dataset, <span class="at">file =</span> <span class="fu">file.path</span>(download_dir, dataset_geo_id, <span class="st">&quot;cleaned_dataset.Rda&quot;</span>))</span>
+<span id="cb32-15"><a href="#cb32-15" tabindex="-1"></a></span>
+<span id="cb32-16"><a href="#cb32-16" tabindex="-1"></a><span class="co"># Output the number of rows and columns</span></span>
+<span id="cb32-17"><a href="#cb32-17" tabindex="-1"></a><span class="fu">cat</span>(</span>
+<span id="cb32-18"><a href="#cb32-18" tabindex="-1"></a>    <span class="fu">c</span>(</span>
+<span id="cb32-19"><a href="#cb32-19" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Number of rows in the final cleaned dataset:</span><span class="sc">\t</span><span class="st">%s&quot;</span>, <span class="fu">nrow</span>(cleaned_dataset)),</span>
+<span id="cb32-20"><a href="#cb32-20" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">&quot;Number of columns:</span><span class="sc">\t\t\t\t\t\t\t</span><span class="st">%s&quot;</span>, <span class="fu">ncol</span>(cleaned_dataset))</span>
+<span id="cb32-21"><a href="#cb32-21" tabindex="-1"></a>    ),</span>
+<span id="cb32-22"><a href="#cb32-22" tabindex="-1"></a>    <span class="at">sep =</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span></span>
+<span id="cb32-23"><a href="#cb32-23" tabindex="-1"></a>)</span></code></pre></div>
+<pre><code>## Number of rows in the final cleaned dataset: 20438
+## Number of columns:                           12</code></pre>
+</div>
+</div>
+</div>
+<div id="visualizations-and-normalization" class="section level2"
+number="0.5">
+<h2><span class="header-section-number">0.5</span> Visualizations and
+Normalization</h2>
+<div id="visualizations-prior-to-normalization" class="section level3"
+number="0.5.1">
+<h3><span class="header-section-number">0.5.1</span> Visualizations
+Prior to Normalization</h3>
+<p>Before we proceed with any normalization steps, we will visualize the
+data. This will give us a point of comparison as to the effects of
+normalization (as we’ll plot after the fact too).</p>
+<div id="boxplot" class="section level4" number="0.5.1.1">
+<h4><span class="header-section-number">0.5.1.1</span> Boxplot</h4>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" tabindex="-1"></a><span class="co"># Transform the data by applying log2 to the expression values</span></span>
+<span id="cb34-2"><a href="#cb34-2" tabindex="-1"></a>data2plot <span class="ot">&lt;-</span> <span class="fu">log2</span>(cleaned_dataset)</span>
+<span id="cb34-3"><a href="#cb34-3" tabindex="-1"></a></span>
+<span id="cb34-4"><a href="#cb34-4" tabindex="-1"></a><span class="co"># Change the column names to correspond to the treatment type from &lt;sample_metadata&gt;</span></span>
+<span id="cb34-5"><a href="#cb34-5" tabindex="-1"></a><span class="fu">colnames</span>(data2plot) <span class="ot">&lt;-</span> sample_metadata<span class="sc">$</span>treatment[<span class="fu">match</span>(<span class="fu">colnames</span>(data2plot), <span class="fu">rownames</span>(sample_metadata))]</span>
+<span id="cb34-6"><a href="#cb34-6" tabindex="-1"></a></span>
+<span id="cb34-7"><a href="#cb34-7" tabindex="-1"></a>box_colors <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">rep</span>(<span class="st">&quot;red&quot;</span>, <span class="dv">6</span>), <span class="fu">rep</span>(<span class="st">&quot;blue&quot;</span>, <span class="dv">6</span>))</span>
+<span id="cb34-8"><a href="#cb34-8" tabindex="-1"></a></span>
+<span id="cb34-9"><a href="#cb34-9" tabindex="-1"></a><span class="co"># Create a boxplot without x-axis labels</span></span>
+<span id="cb34-10"><a href="#cb34-10" tabindex="-1"></a><span class="fu">boxplot</span>(data2plot, <span class="at">xaxt =</span> <span class="st">&quot;n&quot;</span>, <span class="at">las =</span> <span class="dv">2</span>, <span class="at">main =</span> <span class="st">&quot;Cannabidiol as COVID Treatment RNASeq Boxplot&quot;</span>, <span class="at">ylab =</span> <span class="st">&quot;Log2 TPM&quot;</span>, <span class="at">xlab =</span> <span class="st">&quot;Treatment&quot;</span>, <span class="at">cex =</span> <span class="fl">0.5</span>, <span class="at">cex.lab =</span> <span class="fl">0.8</span>, <span class="at">col =</span> box_colors)</span>
+<span id="cb34-11"><a href="#cb34-11" tabindex="-1"></a></span>
+<span id="cb34-12"><a href="#cb34-12" tabindex="-1"></a><span class="co"># Draw the median line</span></span>
+<span id="cb34-13"><a href="#cb34-13" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">h =</span> <span class="fu">median</span>(<span class="fu">apply</span>(data2plot, <span class="dv">2</span>, median)), <span class="at">col =</span> <span class="st">&quot;green&quot;</span>, <span class="at">lty =</span> <span class="dv">2</span>, <span class="at">lwd =</span> <span class="dv">2</span>)</span>
+<span id="cb34-14"><a href="#cb34-14" tabindex="-1"></a></span>
+<span id="cb34-15"><a href="#cb34-15" tabindex="-1"></a><span class="co"># Add x-axis labels manually with a 45 degree rotation</span></span>
+<span id="cb34-16"><a href="#cb34-16" tabindex="-1"></a><span class="fu">text</span>(<span class="at">x =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(data2plot), <span class="at">y =</span> <span class="fu">par</span>(<span class="st">&quot;usr&quot;</span>)[<span class="dv">3</span>] <span class="sc">-</span> <span class="fl">0.2</span>, <span class="at">srt =</span> <span class="dv">45</span>, <span class="at">adj =</span> <span class="dv">1</span>, <span class="at">labels =</span> <span class="fu">names</span>(data2plot), <span class="at">xpd =</span> <span class="cn">TRUE</span>, <span class="at">cex =</span> <span class="fl">0.8</span>)</span>
+<span id="cb34-17"><a href="#cb34-17" tabindex="-1"></a></span>
+<span id="cb34-18"><a href="#cb34-18" tabindex="-1"></a><span class="co"># Add a legend (red - SAR-CoV-2, blue - Mock)</span></span>
+<span id="cb34-19"><a href="#cb34-19" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">&quot;topright&quot;</span>, <span class="at">legend =</span> <span class="fu">c</span>(<span class="st">&quot;SARS-CoV-2&quot;</span>, <span class="st">&quot;Mock&quot;</span>), <span class="at">fill =</span> <span class="fu">c</span>(<span class="st">&quot;red&quot;</span>, <span class="st">&quot;blue&quot;</span>))</span></code></pre></div>
+<p><img src="A1_Notebook_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+</div>
+<div id="density-plot" class="section level4" number="0.5.1.2">
+<h4><span class="header-section-number">0.5.1.2</span> Density Plot</h4>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" tabindex="-1"></a><span class="co"># Apply a density function to the data for plotting</span></span>
+<span id="cb35-2"><a href="#cb35-2" tabindex="-1"></a>counts_density <span class="ot">&lt;-</span> <span class="fu">apply</span>(<span class="fu">log2</span>(cleaned_dataset), <span class="dv">2</span>, density)</span>
+<span id="cb35-3"><a href="#cb35-3" tabindex="-1"></a></span>
+<span id="cb35-4"><a href="#cb35-4" tabindex="-1"></a><span class="co"># Calculate the density limits across all samples</span></span>
+<span id="cb35-5"><a href="#cb35-5" tabindex="-1"></a>xlim <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb35-6"><a href="#cb35-6" tabindex="-1"></a>ylim <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb35-7"><a href="#cb35-7" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(counts_density)) {</span>
+<span id="cb35-8"><a href="#cb35-8" tabindex="-1"></a>    xlim <span class="ot">&lt;-</span> <span class="fu">range</span>(<span class="fu">c</span>(xlim, counts_density[[i]]<span class="sc">$</span>x))</span>
+<span id="cb35-9"><a href="#cb35-9" tabindex="-1"></a>    ylim <span class="ot">&lt;-</span> <span class="fu">range</span>(<span class="fu">c</span>(ylim, counts_density[[i]]<span class="sc">$</span>y))</span>
+<span id="cb35-10"><a href="#cb35-10" tabindex="-1"></a>}</span>
+<span id="cb35-11"><a href="#cb35-11" tabindex="-1"></a>cols <span class="ot">&lt;-</span> <span class="fu">rainbow</span>(<span class="fu">length</span>(counts_density))</span>
+<span id="cb35-12"><a href="#cb35-12" tabindex="-1"></a>ltys <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">1</span>, <span class="fu">length</span>(counts_density))</span>
+<span id="cb35-13"><a href="#cb35-13" tabindex="-1"></a></span>
+<span id="cb35-14"><a href="#cb35-14" tabindex="-1"></a><span class="co"># Iniiate the density plot</span></span>
+<span id="cb35-15"><a href="#cb35-15" tabindex="-1"></a><span class="fu">plot</span>(counts_density[[<span class="dv">1</span>]],</span>
+<span id="cb35-16"><a href="#cb35-16" tabindex="-1"></a>    <span class="at">xlim =</span> xlim, <span class="at">ylim =</span> ylim, <span class="at">type =</span> <span class="st">&quot;n&quot;</span>,</span>
+<span id="cb35-17"><a href="#cb35-17" tabindex="-1"></a>    <span class="at">ylab =</span> <span class="st">&quot;Smoothing density of log2-CPM&quot;</span>,</span>
+<span id="cb35-18"><a href="#cb35-18" tabindex="-1"></a>    <span class="at">main =</span> <span class="st">&quot;&quot;</span>, <span class="at">cex.lab =</span> <span class="fl">0.85</span></span>
+<span id="cb35-19"><a href="#cb35-19" tabindex="-1"></a>)</span>
+<span id="cb35-20"><a href="#cb35-20" tabindex="-1"></a></span>
+<span id="cb35-21"><a href="#cb35-21" tabindex="-1"></a><span class="co"># Add the density lines for each sample</span></span>
+<span id="cb35-22"><a href="#cb35-22" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(counts_density)) {</span>
+<span id="cb35-23"><a href="#cb35-23" tabindex="-1"></a>    <span class="fu">lines</span>(counts_density[[i]], <span class="at">col =</span> cols[i], <span class="at">lty =</span> ltys[i])</span>
+<span id="cb35-24"><a href="#cb35-24" tabindex="-1"></a>}</span>
+<span id="cb35-25"><a href="#cb35-25" tabindex="-1"></a></span>
+<span id="cb35-26"><a href="#cb35-26" tabindex="-1"></a><span class="co"># Add a legend with the column names (i.e., sample/condition) as the labels</span></span>
+<span id="cb35-27"><a href="#cb35-27" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">&quot;topright&quot;</span>, <span class="at">legend =</span> <span class="fu">colnames</span>(cleaned_dataset), <span class="at">col =</span> cols, <span class="at">lty =</span> ltys, <span class="at">cex =</span> <span class="fl">0.8</span>)</span></code></pre></div>
+<p><img src="A1_Notebook_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+</div>
+</div>
+<div id="applying-normalization" class="section level3" number="0.5.2">
+<h3><span class="header-section-number">0.5.2</span> Applying
+Normalization</h3>
+<p>With the dataset cleaned, we can now apply normalization to the
+expression values. We will use the <code>edgeR</code> package to
+normalize the data.</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" tabindex="-1"></a><span class="co"># Create a second object to store the normalized data</span></span>
+<span id="cb36-2"><a href="#cb36-2" tabindex="-1"></a>normalized_dataset <span class="ot">&lt;-</span> cleaned_dataset</span>
+<span id="cb36-3"><a href="#cb36-3" tabindex="-1"></a></span>
+<span id="cb36-4"><a href="#cb36-4" tabindex="-1"></a><span class="co"># Remove the row names</span></span>
+<span id="cb36-5"><a href="#cb36-5" tabindex="-1"></a><span class="fu">rownames</span>(normalized_dataset) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb36-6"><a href="#cb36-6" tabindex="-1"></a></span>
+<span id="cb36-7"><a href="#cb36-7" tabindex="-1"></a><span class="co"># Log2 transform the data</span></span>
+<span id="cb36-8"><a href="#cb36-8" tabindex="-1"></a>normalized_dataset <span class="ot">&lt;-</span> <span class="fu">log2</span>(normalized_dataset <span class="sc">+</span> <span class="dv">1</span>)</span>
+<span id="cb36-9"><a href="#cb36-9" tabindex="-1"></a></span>
+<span id="cb36-10"><a href="#cb36-10" tabindex="-1"></a><span class="co"># Create the edgeR container for the count data</span></span>
+<span id="cb36-11"><a href="#cb36-11" tabindex="-1"></a>d <span class="ot">&lt;-</span> edgeR<span class="sc">::</span><span class="fu">DGEList</span>(<span class="at">counts=</span>normalized_dataset, <span class="at">group=</span>sample_metadata<span class="sc">$</span>treatment)</span>
+<span id="cb36-12"><a href="#cb36-12" tabindex="-1"></a></span>
+<span id="cb36-13"><a href="#cb36-13" tabindex="-1"></a><span class="co"># Calculate the normalization factors</span></span>
+<span id="cb36-14"><a href="#cb36-14" tabindex="-1"></a>d <span class="ot">&lt;-</span> edgeR<span class="sc">::</span><span class="fu">calcNormFactors</span>(d)</span>
+<span id="cb36-15"><a href="#cb36-15" tabindex="-1"></a></span>
+<span id="cb36-16"><a href="#cb36-16" tabindex="-1"></a><span class="co"># Normalize the data</span></span>
+<span id="cb36-17"><a href="#cb36-17" tabindex="-1"></a>normalized_dataset <span class="ot">&lt;-</span> edgeR<span class="sc">::</span><span class="fu">cpm</span>(d)</span>
+<span id="cb36-18"><a href="#cb36-18" tabindex="-1"></a></span>
+<span id="cb36-19"><a href="#cb36-19" tabindex="-1"></a><span class="co"># Plot the normalized data</span></span>
+<span id="cb36-20"><a href="#cb36-20" tabindex="-1"></a><span class="fu">boxplot</span>(normalized_dataset, <span class="at">xaxt =</span> <span class="st">&quot;n&quot;</span>, <span class="at">las =</span> <span class="dv">2</span>, <span class="at">main =</span> <span class="st">&quot;Cannabidiol as COVID Treatment RNASeq Boxplot (Normalized)&quot;</span>, <span class="at">ylab =</span> <span class="st">&quot;Log2 TPM&quot;</span>, <span class="at">xlab =</span> <span class="st">&quot;Treatment&quot;</span>, <span class="at">cex =</span> <span class="fl">0.5</span>, <span class="at">cex.lab =</span> <span class="fl">0.8</span>, <span class="at">col =</span> box_colors)</span>
+<span id="cb36-21"><a href="#cb36-21" tabindex="-1"></a></span>
+<span id="cb36-22"><a href="#cb36-22" tabindex="-1"></a><span class="co"># Draw the median line</span></span>
+<span id="cb36-23"><a href="#cb36-23" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">h =</span> <span class="fu">median</span>(<span class="fu">apply</span>(normalized_dataset, <span class="dv">2</span>, median)), <span class="at">col =</span> <span class="st">&quot;green&quot;</span>, <span class="at">lty =</span> <span class="dv">2</span>, <span class="at">lwd =</span> <span class="dv">2</span>)</span>
+<span id="cb36-24"><a href="#cb36-24" tabindex="-1"></a></span>
+<span id="cb36-25"><a href="#cb36-25" tabindex="-1"></a><span class="co"># Add x-axis labels manually with a 45 degree rotation</span></span>
+<span id="cb36-26"><a href="#cb36-26" tabindex="-1"></a><span class="fu">text</span>(<span class="at">x =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(normalized_dataset), <span class="at">y =</span> <span class="fu">par</span>(<span class="st">&quot;usr&quot;</span>)[<span class="dv">3</span>] <span class="sc">-</span> <span class="fl">0.2</span>, <span class="at">srt =</span> <span class="dv">45</span>, <span class="at">adj =</span> <span class="dv">1</span>, <span class="at">labels =</span> <span class="fu">names</span>(normalized_dataset), <span class="at">xpd =</span> <span class="cn">TRUE</span>, <span class="at">cex =</span> <span class="fl">0.8</span>)</span>
+<span id="cb36-27"><a href="#cb36-27" tabindex="-1"></a></span>
+<span id="cb36-28"><a href="#cb36-28" tabindex="-1"></a><span class="co"># Add a legend (red - SAR-CoV-2, blue - Mock)</span></span>
+<span id="cb36-29"><a href="#cb36-29" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">&quot;topright&quot;</span>, <span class="at">legend =</span> <span class="fu">c</span>(<span class="st">&quot;SARS-CoV-2&quot;</span>, <span class="st">&quot;Mock&quot;</span>), <span class="at">fill =</span> <span class="fu">c</span>(<span class="st">&quot;red&quot;</span>, <span class="st">&quot;blue&quot;</span>))</span></code></pre></div>
+<p><img src="A1_Notebook_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" tabindex="-1"></a><span class="co"># Density plot</span></span>
+<span id="cb37-2"><a href="#cb37-2" tabindex="-1"></a>counts_density <span class="ot">&lt;-</span> <span class="fu">apply</span>(normalized_dataset, <span class="dv">2</span>, density)</span>
+<span id="cb37-3"><a href="#cb37-3" tabindex="-1"></a>xlim <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb37-4"><a href="#cb37-4" tabindex="-1"></a>ylim <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb37-5"><a href="#cb37-5" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(counts_density)) {</span>
+<span id="cb37-6"><a href="#cb37-6" tabindex="-1"></a>    xlim <span class="ot">&lt;-</span> <span class="fu">range</span>(<span class="fu">c</span>(xlim, counts_density[[i]]<span class="sc">$</span>x))</span>
+<span id="cb37-7"><a href="#cb37-7" tabindex="-1"></a>    ylim <span class="ot">&lt;-</span> <span class="fu">range</span>(<span class="fu">c</span>(ylim, counts_density[[i]]<span class="sc">$</span>y))</span>
+<span id="cb37-8"><a href="#cb37-8" tabindex="-1"></a>}</span>
+<span id="cb37-9"><a href="#cb37-9" tabindex="-1"></a>cols <span class="ot">&lt;-</span> <span class="fu">rainbow</span>(<span class="fu">length</span>(counts_density))</span>
+<span id="cb37-10"><a href="#cb37-10" tabindex="-1"></a>ltys <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">1</span>, <span class="fu">length</span>(counts_density))</span>
+<span id="cb37-11"><a href="#cb37-11" tabindex="-1"></a><span class="fu">plot</span>(counts_density[[<span class="dv">1</span>]],</span>
+<span id="cb37-12"><a href="#cb37-12" tabindex="-1"></a>    <span class="at">xlim =</span> xlim, <span class="at">ylim =</span> ylim, <span class="at">type =</span> <span class="st">&quot;n&quot;</span>,</span>
+<span id="cb37-13"><a href="#cb37-13" tabindex="-1"></a>    <span class="at">ylab =</span> <span class="st">&quot;Smoothing density of log2-CPM&quot;</span>,</span>
+<span id="cb37-14"><a href="#cb37-14" tabindex="-1"></a>    <span class="at">main =</span> <span class="st">&quot;&quot;</span>, <span class="at">cex.lab =</span> <span class="fl">0.85</span></span>
+<span id="cb37-15"><a href="#cb37-15" tabindex="-1"></a>)</span>
+<span id="cb37-16"><a href="#cb37-16" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(counts_density)) {</span>
+<span id="cb37-17"><a href="#cb37-17" tabindex="-1"></a>    <span class="fu">lines</span>(counts_density[[i]], <span class="at">col =</span> cols[i], <span class="at">lty =</span> ltys[i])</span>
+<span id="cb37-18"><a href="#cb37-18" tabindex="-1"></a>}</span>
+<span id="cb37-19"><a href="#cb37-19" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">&quot;topright&quot;</span>, <span class="at">legend =</span> <span class="fu">colnames</span>(normalized_dataset), <span class="at">col =</span> cols, <span class="at">lty =</span> ltys, <span class="at">cex =</span> <span class="fl">0.8</span>)</span></code></pre></div>
+<p><img src="A1_Notebook_files/figure-html/unnamed-chunk-23-2.png" width="672" /></p>
+</div>
+</div>
+<div id="questions" class="section level2" number="0.6">
+<h2><span class="header-section-number">0.6</span> Questions</h2>
+<p><strong>1. Why is the dataset of interest to you?</strong></p>
+<p>This dataset piques my interest because I have always been curious
+about cannabis and its effects on the human body. Most of my interest on
+this front lies on the potential to target the effects of
+tetrahydrocannabinol (THC) to “cater a high”.</p>
+<p>However, this dataset focuses on cannabidiol (CBD) which is a
+non-psychoactive compound found in cannabis. I’ve known that this
+compound has multiple therapeutic effects (i.e., treating epilepsy), and
+it’s interesting to see it come up again but in the context of COVID-19.
+Especially given that the pandemic is only recently behind us, it’s
+interesting to see how this compound could have been used to treat the
+virus.</p>
+<p><strong>2. What are the control and test conditions of the
+dataset?</strong></p>
+<p>The control treatment in this dataset is <code>DMSO</code> (dimethyl
+sulfoxide) and the test condition is <code>Cannabidiol 10uM</code>.
+There are two “sets” of these conditions, one where the cells were
+infected with <code>SARS-CoV-2</code> and the other where the cells were
+not infected (denoted as <code>Mock</code> in the data).</p>
+<p><strong>3. How many samples in each of the conditions of your
+dataset?</strong></p>
+<p>Each condition (i.e., based on the sort of infection - SARS-CoV-2 or
+Mock) had 6 samples.</p>
+<p><strong>4. Were there expression values that were not unique for
+specific genes? How did you handle these?</strong></p>
+<p>There were a few genes that had duplicates in the data (more
+discussed in Q7). Beyond these duplicates and lack of a unique readout,
+there were also a fair amount of genes that had 0 expression across all
+conditions/samples. I handled these by removing the rows with 0
+expression across all samples from the dataset.</p>
+<p><strong>5. Were there expression values that could not be mapped to
+current HUGO symbols?</strong></p>
+<p>Yes, there were a few gene identifiers that couldn’t be mapped to a
+gene symbol. I handled this by removing these rows from the dataset
+under the assumption that newer versions are available (and if present
+in our dataset, mapped to a gene symbol).</p>
+<p>To verify that the Ensembl IDs were indeed deprecated, I had randomly
+sampled (using the seed <code>123</code> for reproducibility) from the
+list of IDs which returned an NA gene symbol, and then manually queried
+the Ensembl database to see what they were returning. All the
+identifiers returned the same output from Ensembl in that they were part
+of an older version of the database.</p>
+<p><strong>6. Were there any outliers in your dataset? How were they
+handled in the originating paper? How many outliers were
+removed?</strong></p>
+<p>Since the dataset I have been working with has already been
+normalized, I did not have to handle any explicit outliers. Furthermore,
+the paper does not mention any method on removing outliers. However,
+their analyses did use certain cut offs/thresholds depending on the
+analysis being performed. For example, gene set enrichment analyses were
+performed using the <code>Metascape</code> method, where they had used a
+<code>q</code> value of 0.05 as the threshold for significance.</p>
+<p><strong>7. How did you handle replicates?</strong></p>
+<p>There were a handful of genes that had duplicate entries. I noticed
+this after mapping the Ensembl IDs to gene symbols which resulted in
+some rows (each of them uniquely identified by the Ensembl ID) being
+mapped to the same gene symbol.</p>
+<p>I handled this by combining (i.e., summing) the counts of the
+duplicate gene symbols in a new dataframe. This let me collapse the
+duplicates into single rows which I could then merge with the non-dupe
+portion of the main dataset into a new dataframe for further
+analysis.</p>
+<p><strong>8. What is the final coverage of your dataset?</strong></p>
+<p>The final dataset has 20 438 rows which correspond to unique gene
+symbols. This is in contrast to the original dataset which had 57 832
+rows.</p>
+</div>
+<div id="references" class="section level2" number="0.7">
+<h2><span class="header-section-number">0.7</span> References</h2>
+<div id="refs" class="references csl-bib-body">
+<div id="ref-nguyen2022cannabidiol" class="csl-entry">
+1. Nguyen LC, Yang D, Nicolaescu V, Best TJ, Gula H, Saxena D, Gabbard
+JD, Chen S-N, Ohtsuki T, Friesen JB, et al. Cannabidiol inhibits
+SARS-CoV-2 replication through induction of the host ER stress and
+innate immune responses. Science Advances. 2022;8(8):eabi6110. <a
+href="https://www.science.org/doi/abs/10.1126/sciadv.abi6110">https://www.science.org/doi/abs/10.1126/sciadv.abi6110</a>.
+doi:<a
+href="https://doi.org/10.1126/sciadv.abi6110">10.1126/sciadv.abi6110</a>
+</div>
+<div id="ref-10.1093/nar/gks1193" class="csl-entry">
+2. Barrett T, Wilhite SE, Ledoux P, Evangelista C, Kim IF, Tomashevsky
+M, Marshall KA, Phillippy KH, Sherman PM, Holko M, et al. <span
+class="nocase">NCBI GEO: archive for functional genomics data
+sets—update</span>. Nucleic Acids Research. 2012;41(D1):D991–D995. <a
+href="https://doi.org/10.1093/nar/gks1193">https://doi.org/10.1093/nar/gks1193</a>.
+doi:<a
+href="https://doi.org/10.1093/nar/gks1193">10.1093/nar/gks1193</a>
+</div>
+<div id="ref-biocmanager" class="csl-entry">
+3. Morgan M, Ramos M. BiocManager: Access the bioconductor project
+package repository. 2023. <a
+href="https://CRAN.R-project.org/package=BiocManager">https://CRAN.R-project.org/package=BiocManager</a>
+</div>
+<div id="ref-geoquery" class="csl-entry">
+4. Davis S, Meltzer P. GEOquery: A bridge between the gene expression
+omnibus (GEO) and BioConductor. Bioinformatics. 2007;14:1846–1847.
+</div>
+<div id="ref-biomart" class="csl-entry">
+5. Durinck S, Moreau Y, Kasprzyk A, Davis S, De Moor B, Brazma A, Huber
+W. BioMart and bioconductor: A powerful link between biological
+databases and microarray data analysis. Bioinformatics.
+2005;21:3439–3440.
+</div>
+<div id="ref-knitr" class="csl-entry">
+6. Xie Y. Knitr: A comprehensive tool for reproducible research in
+<span>R</span>. In: Stodden V, Leisch F, Peng RD, editors. Implementing
+reproducible computational research. Chapman; Hall/CRC; 2014.
+</div>
+<div id="ref-datatable" class="csl-entry">
+7. Barrett T, Dowle M, Srinivasan A. Data.table: Extension of
+‘data.frame‘. 2023. <a
+href="https://CRAN.R-project.org/package=data.table">https://CRAN.R-project.org/package=data.table</a>
+</div>
+<div id="ref-edger" class="csl-entry">
+8. Chen Y, Lun AAT, Smyth GK. From reads to genes to pathways:
+Differential expression analysis of RNA-seq experiments using rsubread
+and the edgeR quasi-likelihood pipeline. F1000Research. 2016;5:1438.
+doi:<a
+href="https://doi.org/10.12688/f1000research.8987.2">10.12688/f1000research.8987.2</a>
+</div>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
