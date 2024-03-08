@@ -1,2 +1,6 @@
 Entry.md
 .DS_Store
+
+**/venv
+**/*.gem.txt
+**/*.zip
