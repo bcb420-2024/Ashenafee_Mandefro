@@ -6,6 +6,12 @@ My name is Ashenafee 👋🏾, and this repository houses my BCB420 coursework f
 
 You can access my wiki page [here](https://github.com/bcb420-2024/Ashenafee_Mandefro/wiki). It includes the course journal, which is where I'll be documenting my progress and efforts for this course. It will be more frequently updated than this README simply because it serves as a journal.
 
+# Assignments
+
+## Assignment 1
+
+You can find the HTML output of my RMarkdown notebook for Assignment 1 [here](https://github.com/bcb420-2024/Ashenafee_Mandefro/blob/main/Assignment%201/A1_Notebook.html).
+
 # License
 
 This work is licensed under a [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
