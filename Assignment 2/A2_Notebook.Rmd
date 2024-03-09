@@ -1,0 +1,60 @@
+---
+title: "Assignment 2"
+subtitle: "Analyzing Gene Expression Trends in Cannabidiol (CBD) Treated Cells on SARS-CoV-2 Infection"
+author: "Ashenafee Mandefro"
+date: "03/09/2024"
+bibliography: A2.bib
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        number_sections: true
+        theme: cosmo
+        highlight: tango
+        code_folding: hide
+        df_print: paged
+        self_contained: no
+csl: cse.csl
+nocite: '@*'
+---
+
+# Introduction
+
+## Background
+
+### Phytocannabinoids
+
+A phytocannabinoid is a cannabinoid that occurs naturally in plants, such as Cannabis *sativa*. The word "phyto" means "plant", and the prefix "phyto-" is used in biochemistry to refer to compounds derived from plants. These compounds are known to occur in several plant species besides cannabis. The distinction with the prefix "phyto-" must be made because the human body also produces cannabinoids, referred to as *endo*cannabinoids due to their endogenous nature.
+
+### Cannabidiol (CBD)
+
+Cannabidiol (CBD) is one of the numerous phytocannabinoids found in the Cannabis (Cannabis sativa) plant. However, it is not responsible for the "high" commonly associated with use of cannabis - that responsibility falls on delta-9 tetrohydrocannabinol (THC). CBD is a non-psychoactive compound, and has been shown to have a wide range of potential therapeutic properties, including anti-inflammatory, antioxidant, and neuroprotective effects [@atalayAntioxidativeAntiInflammatoryProperties2019; @cassanoCannabisSativaCannabidiol2020]. It has showed promise as a possible treatment for a variety of conditions, including epilepsy, anxiety, and chronic pain [@bonaccorsoCannabidiolCBDUse2019].
+
+### SARS-CoV-2
+
+A highly contagious virus, SARS-CoV-2 is the driving force behind the COVID-19 pandemic. It is a novel coronavirus that was first identified in December 2019 in Wuhan, China, and is primarily spread through respiratory droplets. Those who have been infected with the virus can experience a wide range of symptoms, from mild to severe, with the worst outcome being death. Due to its extreme impact on public health, global economy, and daily life, significant amounts of research went into treatment/prevention methods for the virus from 2020 to 2022.
+
+## Primary Research
+
+### Quick Summary of the Paper
+
+[Cannabidiol Inhibits SARS-CoV-2 Replication through Induction of the Host ER Stress and Innate Immune Responses](https://www.science.org/doi/10.1126/sciadv.abi6110) discusses the effects of CBD treatment in SARS-CoV-2 infected cells and mice, through its action of preventing replication of the virus. The researchers found that these effects are apparent in lung epithelial cells which is a critical finding, given that SARS-CoV-2 manifests itself with many respiratory issues[@nguyenCannabidiolInhibitsSARSCoV22022].
+
+### Data Overview
+
+The RNASeq data from this paper is available on the [Gene Expression Omnibus (GEO)](https://www.ncbi.nlm.nih.gov/geo/) under the accession number [GSE168797](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE168797). More information about the data is summarized in the table below:
+
+| Attribute    | Value |
+|--------|-------|
+| Title  | Cannabidiol Inhibits SARS-CoV-2 Replication through Induction of the Host ER Stress and Innate Immune Responses   |
+| Organism | Homo sapiens |
+| Paper  | Nguyen, L. C., Yang, D., Nicolaescu, V., Best, T. J., Gula, H., Saxena, D., Gabbard, J. D., Chen, S. N., Ohtsuki, T., Friesen, J. B., Drayman, N., Mohamed, A., Dann, C., Silva, D., Robinson-Mailman, L., Valdespino, A., Stock, L., Suárez, E., Jones, K. A., Azizi, S. A., … Rosner, M. R. (2022). Cannabidiol inhibits SARS-CoV-2 replication through induction of the host ER stress and innate immune responses. Science advances, 8(8), eabi6110. https://doi.org/10.1126/sciadv.abi6110   |
+| Samples | 24 |
+| Status | Public on Jan 20, 2022   |
+
+## Previous Normalization
+
+...
+
+# References
+<div id="refs"></div>
