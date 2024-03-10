@@ -8,8 +8,8 @@ output:
     html_document:
         toc: true
         toc_float: true
-        number_sections: true
-        theme: cosmo
+        number_sections: false
+        theme: journal
         highlight: tango
         code_folding: hide
         df_print: paged
@@ -20,7 +20,7 @@ nocite: '@*'
 
 # Introduction
 
-## Background
+## Background {.tabset .tabset-fade}
 
 ### Phytocannabinoids
 
@@ -52,9 +52,111 @@ The RNASeq data from this paper is available on the [Gene Expression Omnibus (GE
 | Samples | 24 |
 | Status | Public on Jan 20, 2022   |
 
-## Previous Normalization
+# Data Preprocessing
 
-...
+## Data Cleaning
+
+The initial phase of data preprocessing consisted of multiple layers of data cleaning. The raw dataset from GEO had 57 832 entries but after cleaning, that was reduced to 20 438 entries. These >20 000 entries were then used in subsequent steps for data normalization and visualization.
+
+## Data Normalization
+
+The cleaned data was visualized using both a boxplot and a density plot to get a quick overview of the distribution of the data and see if things were indeed normalized successfully.
+
+```{r load_data, eval=TRUE, warning=FALSE, message=FALSE}
+# Load the RData file
+load("normalized_dataset.RData")
+load("sample_metadata.RData")
+
+# Create the edgeR container for the count data
+d <- edgeR::DGEList(counts = normalized_dataset, group = sample_metadata$treatment)
+
+# Calculate the normalization factors
+d <- edgeR::calcNormFactors(d)
+
+# Normalize the data
+normalized_dataset <- edgeR::cpm(d)
+```
+
+```{r boxplot, fig.cap="Boxplot of the normalized data", fig.align="center", out.width="100%"}
+# Set the boxplot colors
+box_colors <- c(rep("red", 6), rep("blue", 6))
+
+# Plot the normalized data
+boxplot(
+    normalized_dataset,
+    xaxt = "n",
+    las = 2,
+    main = "Cannabidiol as COVID Treatment RNASeq Boxplot (Normalized)",
+    ylab = "Log2 TPM",
+    xlab = "Treatment",
+    cex = 0.5,
+    cex.lab = 0.8,
+    col = box_colors
+)
+
+# Draw the median line
+abline(
+    h = median(apply(normalized_dataset, 2, median)),
+    col = "green",
+    lty = 2,
+    lwd = 2
+)
+
+# Add x-axis labels manually with a 45 degree rotation
+text(
+    x = seq_along(normalized_dataset),
+    y = par("usr")[3] - 0.2,
+    srt = 45, adj = 1,
+    labels = names(normalized_dataset),
+    xpd = TRUE,
+    cex = 0.8
+)
+
+# Add a legend (red - SAR-CoV-2, blue - Mock)
+legend(
+    "topright",
+    legend = c("SARS-CoV-2", "Mock"),
+    fill = c("red", "blue")
+)
+```
+
+```{r densityplot, fig.cap="Density plot of the normalized data", fig.align="center", out.width="100%"}
+# Density plot
+counts_density <- apply(normalized_dataset, 2, density)
+xlim <- 0
+ylim <- 0
+for (i in seq_along(counts_density)) {
+    xlim <- range(c(xlim, counts_density[[i]]$x))
+    ylim <- range(c(ylim, counts_density[[i]]$y))
+}
+
+cols <- rainbow(length(counts_density))
+ltys <- rep(1, length(counts_density))
+plot(
+    counts_density[[1]],
+    xlim = xlim,
+    ylim = ylim,
+    type = "n",
+    ylab = "Smoothing density of log2-CPM",
+    main = "",
+    cex.lab = 0.85
+)
+for (i in seq_along(counts_density)) {
+    lines(counts_density[[i]], col = cols[i], lty = ltys[i])
+}
+
+legend(
+    "topright",
+    legend = colnames(normalized_dataset),
+    col = cols,
+    lty = ltys,
+    cex = 0.8
+)
+```
+
+# Differential Expression Analysis
+
+
 
 # References
 <div id="refs"></div>
