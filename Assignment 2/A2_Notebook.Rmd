@@ -58,19 +58,22 @@ The RNASeq data from this paper is available on the [Gene Expression Omnibus (GE
 
 The initial phase of data preprocessing consisted of multiple layers of data cleaning. The raw dataset from GEO had 57 832 entries but after cleaning, that was reduced to 20 438 entries. These >20 000 entries were then used in subsequent steps for data normalization and visualization.
 
-## Data Normalization
+## Data Normalization {.tabset .tabset-fade}
 
 The cleaned data was visualized using both a boxplot and a density plot to get a quick overview of the distribution of the data and see if things were indeed normalized successfully.
 
 ```{r load_data, eval=TRUE, warning=FALSE, message=FALSE}
 # Load the RData file
-load("cleaned_dataset.RData")
-load("sample_metadata.RData")
-
-lg2_tpm <- log2(cleaned_dataset + 1)
+load("filtered_data_matrix.RData")
+load("samples_type.RData")
 ```
 
+### Boxplot
+
 ```{r boxplot, fig.cap="Boxplot of the normalized data", fig.align="center", out.width="100%"}
+# Define the log2 TPM
+lg2_tpm <- log2(filtered_data_matrix + 1)
+
 # Set the boxplot colors
 box_colors <- c(rep("red", 6), rep("blue", 6))
 
@@ -114,6 +117,8 @@ legend(
 )
 ```
 
+### Density Plot
+
 ```{r densityplot, fig.cap="Density plot of the normalized data", fig.align="center", out.width="100%"}
 # Density plot
 counts_density <- apply(lg2_tpm, 2, density)
@@ -150,65 +155,86 @@ legend(
 
 # Differential Expression Analysis
 
-## MDS Plot
+## MDS Plot {.tabset .tabset-fade}
 
-```{r mdsplot, fig.cap="MDS plots of the normalized data", fig.align="center", out.width="100%"}
+### By Treatment
+
+```{r mdsplot_treatment, fig.cap="MDS Plot by Treatment of the Filtered Data", fig.align="center", out.width="100%"}
+par(mar = c(5, 4, 4, 15) + 0.5)
+
 # Create the edgeR container for the count data
 d <- edgeR::DGEList(
-    counts = as.matrix(cleaned_dataset),
-    group = sample_metadata$treatment
+    counts = as.matrix(filtered_data_matrix),
+    group = samples_type$treatment
 )
-
-# Calculate the normalization factors
-# d <- edgeR::calcNormFactors(d)
-
-# Set up a two-panel plot layout
-par(mfrow = c(1, 2))
 
 # Perform MDS analysis for treatment
-mds <- limma::plotMDS(
+edgeR::plotMDS.DGEList(
     d,
     labels = NULL,
     pch = 1,
-    col = c("red", "blue")[factor(sample_metadata$treatment)],
+    col = c("red", "blue")[factor(samples_type$treatment)],
 )
 
-# Add a legend for treatment
+# Add a title and legend for treatment
+title(main = "MDS Plot by Treatment")
+
+# Add a legend beside the plot
 legend(
     "topright",
-    legend = levels(factor(sample_metadata$treatment)),
-    fill = c("red", "blue")
-)
-
-# Perform MDS analysis for infection
-mds_infection <- limma::plotMDS(
-    d,
-    labels = NULL,
-    pch = 1,
-    col = c("red", "blue")[factor(sample_metadata$infection)],
-)
-
-# Add a legend for infection
-legend(
-    "topright",
-    legend = levels(factor(sample_metadata$infection)),
-    fill = c("red", "blue")
+    inset=c(-0.75,0.4),
+    legend = levels(factor(samples_type$treatment)),
+    fill = c("red", "blue"),
+    xpd = NA
 )
 ```
 
-## Dispersion and Mean-Variance Plot
+### By Infection
+
+```{r mdsplot_infection, fig.cap="MDS Plot by Infection of the Filtered Data", fig.align="center", out.width="100%"}
+par(mar = c(5, 4, 4, 15) + 0.5)
+
+# Create the edgeR container for the count data
+d <- edgeR::DGEList(
+    counts = as.matrix(filtered_data_matrix),
+    group = samples_type$infection
+)
+
+# Perform MDS analysis for treatment
+edgeR::plotMDS.DGEList(
+    d,
+    labels = NULL,
+    pch = 1,
+    col = c("red", "blue")[factor(samples_type$infection)],
+)
+
+# Add a title and legend for infection
+title(main = "MDS Plot by Infection")
+
+# Add a legend beside the plot
+legend(
+    "topright",
+    inset=c(-0.75,0.4),
+    legend = levels(factor(samples_type$infection)),
+    fill = c("red", "blue"),
+    xpd = NA
+)
+```
+
+## Dispersion and Mean-Variance Plot {.tabset .tabset-fade}
+
+### Dispersion Plot
 
 ```{r dispersion, eval=TRUE, warning=FALSE, message=FALSE, fig.cap="Dispersion Plot", fig.align="center", out.width="100%"}
-# Make the layout one panel again
-par(mfrow = c(1, 1))
-
 # Create the design matrix
-design <- model.matrix(~sample_metadata$treatment)
+design <- model.matrix(~samples_type$treatment)
 d <- edgeR::estimateDisp(d, design)
 
 # Plot the dispersion
 edgeR::plotBCV(d, col.tagwise = "black", col.common = "red")
 ```
+
+### Mean-Variance Plot
 
 ```{r meanvariance, eval=TRUE, warning=FALSE, message=FALSE, fig.cap="Mean-Variance Plot", fig.align="center", out.width="100%"}
 # Plot the mean-variance relationship
@@ -222,19 +248,53 @@ edgeR::plotMeanVar(
 )
 ```
 
-```{r volcano, eval=TRUE, warning=FALSE, message=FALSE, fig.cap="Volcano Plot", fig.align="center", out.width="100%"}
-# Create the design matrix
-design <- model.matrix(~sample_metadata$treatment)
+## Counting Significant Genes
 
-# Fit the model
+```{r count_sig_genes, eval=TRUE, warning=FALSE, message=FALSE}
+# Create the DGEList object and the design matrix
+d <- edgeR::DGEList(
+    counts = as.matrix(filtered_data_matrix),
+    group = samples_type$treatment
+)
+design <- model.matrix(~samples_type$treatment)
+
+# Estimate the dispersion and fit the model
+d <- edgeR::estimateDisp(d, design)
 fit <- edgeR::glmQLFit(d, design)
 
 # Perform the likelihood ratio test
 qlf.cbd_vs_dmso <- edgeR::glmQLFTest(
     fit,
-    coef = 'sample_metadata$treatmentDMSO'
+    coef = 'samples_type$treatmentDMSO'
 )
 
+# Extract the most significant genes
+top_cbd_vs_dmso <- edgeR::topTags(qlf.cbd_vs_dmso, n = nrow(d))
+
+# Count the number of significant genes (PValue & FDR) and write the counts in a kable table
+n_sig_genes <- data.frame(
+    PValue = length(which(top_cbd_vs_dmso$table$PValue < 0.05)),
+    FDR = length(which(top_cbd_vs_dmso$table$FDR < 0.05))
+)
+
+knitr::kable(
+    n_sig_genes,
+    type = "html",
+    row.names = TRUE
+)
+```
+
+**1. How many genes are significantly differentially expressed? What thresholds did you use and why?**
+
+**2. Which method did you use to adjust for multiple testing and why?**
+
+**3. How many genes passed correction?**
+
+## Differential Expression Visualization
+
+### Volcano Plot
+
+```{r volcano, eval=TRUE, warning=FALSE, message=FALSE, fig.cap="Volcano Plot", fig.align="center", out.width="100%"}
 # Plot the volcano plot
 results <- data.frame(
     logFC = qlf.cbd_vs_dmso$table$logFC,
@@ -258,44 +318,52 @@ ggplot2::ggplot(
     ggplot2::theme_minimal()
 ```
 
-```{r topgenes, eval=TRUE, warning=FALSE, message=FALSE}
+### Heatmap
 
-```
+```{r heatmap, eval=TRUE, warning=FALSE, message=FALSE, fig.cap="Heatmap of Significantly Differentially Expressed Genes", fig.align="center", out.width="100%"}
+# Create a numerical matrix of our count data
+heatmap_matrix <- as.matrix(filtered_data_matrix)
 
-## Fitting the Model
+# Set the row names to be the gene names
+rownames(heatmap_matrix) <- rownames(filtered_data_matrix)
 
-```{r fitmodel, eval=TRUE, warning=FALSE, message=FALSE}
-# Fit the model
-fit <- edgeR::glmQLFit(d, design)
+# Set the column names to be the sample names
+colnames(heatmap_matrix) <- colnames(filtered_data_matrix)
 
-# View(design)
+# Get the row names of the significantly differentially expressed genes
+sig_genes <- rownames(qlf.cbd_vs_dmso$table[top_cbd_vs_dmso$table$FDR < 0.05, ])
 
-# Normalize the data
-norm_counts <- edgeR::cpm(d)
+# Subset the matrix to only include the significantly differentially expressed genes
+heatmap_matrix <- heatmap_matrix[sig_genes, ]
 
-# Perform the likelihood ratio test
-qlf.cbd_vs_dmso <- edgeR::glmQLFTest(
-    fit,
-    coef = ncol(design),
+# Scale the matrix
+heatmap_matrix <- t(scale(t(heatmap_matrix)))
+
+# Check if the matrix has negative values
+if (min(heatmap_matrix) < 0) {
+    heatmap_col <- circlize::colorRamp2(
+        c(min(heatmap_matrix), 0, max(heatmap_matrix)),
+        c("blue", "white", "red")
+    )
+} else {
+    heatmap_col <- circlize::colorRamp2(
+        range(heatmap_matrix),
+        c("white", "red")
+    )
+}
+
+# Create the heatmap
+ComplexHeatmap::Heatmap(
+    as.matrix(heatmap_matrix),
+    col = heatmap_col,
+    cluster_rows = TRUE,
+    cluster_columns = TRUE,
+    show_row_dend = TRUE,
+    show_column_dend = TRUE,
+    show_row_names = FALSE,
+    show_column_names = TRUE,
+    show_heatmap_legend = TRUE
 )
-
-knitr::kable(
-    edgeR::topTags(qlf.cbd_vs_dmso),
-    type = "html",
-    row.names = TRUE
-)
-
-# Get the results
-qlf_output <- edgeR::topTags(
-    qlf.cbd_vs_dmso,
-    sort.by = "PValue",
-    n = nrow(d)
-)
-
-length(which(qlf_output$table$PValue < 0.05))
-length(which(qlf_output$table$FDR < 0.05))
-
-# Extract the top genes
 ```
 
 # References
