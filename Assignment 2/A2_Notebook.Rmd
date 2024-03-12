@@ -64,17 +64,10 @@ The cleaned data was visualized using both a boxplot and a density plot to get a
 
 ```{r load_data, eval=TRUE, warning=FALSE, message=FALSE}
 # Load the RData file
-load("normalized_dataset.RData")
+load("cleaned_dataset.RData")
 load("sample_metadata.RData")
 
-# Create the edgeR container for the count data
-d <- edgeR::DGEList(counts = normalized_dataset, group = sample_metadata$treatment)
-
-# Calculate the normalization factors
-d <- edgeR::calcNormFactors(d)
-
-# Normalize the data
-normalized_dataset <- edgeR::cpm(d)
+lg2_tpm <- log2(cleaned_dataset + 1)
 ```
 
 ```{r boxplot, fig.cap="Boxplot of the normalized data", fig.align="center", out.width="100%"}
@@ -83,7 +76,7 @@ box_colors <- c(rep("red", 6), rep("blue", 6))
 
 # Plot the normalized data
 boxplot(
-    normalized_dataset,
+    lg2_tpm,
     xaxt = "n",
     las = 2,
     main = "Cannabidiol as COVID Treatment RNASeq Boxplot (Normalized)",
@@ -96,7 +89,7 @@ boxplot(
 
 # Draw the median line
 abline(
-    h = median(apply(normalized_dataset, 2, median)),
+    h = median(apply(lg2_tpm, 2, median)),
     col = "green",
     lty = 2,
     lwd = 2
@@ -104,10 +97,11 @@ abline(
 
 # Add x-axis labels manually with a 45 degree rotation
 text(
-    x = seq_along(normalized_dataset),
+    x = seq_along(lg2_tpm),
     y = par("usr")[3] - 0.2,
-    srt = 45, adj = 1,
-    labels = names(normalized_dataset),
+    adj = 1,
+    srt = 45,
+    labels = colnames(lg2_tpm),
     xpd = TRUE,
     cex = 0.8
 )
@@ -122,7 +116,7 @@ legend(
 
 ```{r densityplot, fig.cap="Density plot of the normalized data", fig.align="center", out.width="100%"}
 # Density plot
-counts_density <- apply(normalized_dataset, 2, density)
+counts_density <- apply(lg2_tpm, 2, density)
 xlim <- 0
 ylim <- 0
 for (i in seq_along(counts_density)) {
@@ -147,7 +141,7 @@ for (i in seq_along(counts_density)) {
 
 legend(
     "topright",
-    legend = colnames(normalized_dataset),
+    legend = colnames(lg2_tpm),
     col = cols,
     lty = ltys,
     cex = 0.8
@@ -156,7 +150,153 @@ legend(
 
 # Differential Expression Analysis
 
+## MDS Plot
 
+```{r mdsplot, fig.cap="MDS plots of the normalized data", fig.align="center", out.width="100%"}
+# Create the edgeR container for the count data
+d <- edgeR::DGEList(
+    counts = as.matrix(cleaned_dataset),
+    group = sample_metadata$treatment
+)
+
+# Calculate the normalization factors
+# d <- edgeR::calcNormFactors(d)
+
+# Set up a two-panel plot layout
+par(mfrow = c(1, 2))
+
+# Perform MDS analysis for treatment
+mds <- limma::plotMDS(
+    d,
+    labels = NULL,
+    pch = 1,
+    col = c("red", "blue")[factor(sample_metadata$treatment)],
+)
+
+# Add a legend for treatment
+legend(
+    "topright",
+    legend = levels(factor(sample_metadata$treatment)),
+    fill = c("red", "blue")
+)
+
+# Perform MDS analysis for infection
+mds_infection <- limma::plotMDS(
+    d,
+    labels = NULL,
+    pch = 1,
+    col = c("red", "blue")[factor(sample_metadata$infection)],
+)
+
+# Add a legend for infection
+legend(
+    "topright",
+    legend = levels(factor(sample_metadata$infection)),
+    fill = c("red", "blue")
+)
+```
+
+## Dispersion and Mean-Variance Plot
+
+```{r dispersion, eval=TRUE, warning=FALSE, message=FALSE, fig.cap="Dispersion Plot", fig.align="center", out.width="100%"}
+# Make the layout one panel again
+par(mfrow = c(1, 1))
+
+# Create the design matrix
+design <- model.matrix(~sample_metadata$treatment)
+d <- edgeR::estimateDisp(d, design)
+
+# Plot the dispersion
+edgeR::plotBCV(d, col.tagwise = "black", col.common = "red")
+```
+
+```{r meanvariance, eval=TRUE, warning=FALSE, message=FALSE, fig.cap="Mean-Variance Plot", fig.align="center", out.width="100%"}
+# Plot the mean-variance relationship
+edgeR::plotMeanVar(
+    d,
+    show.raw.vars = TRUE,
+    show.tagwise.vars = TRUE,
+    NBline = TRUE,
+    show.ave.raw.vars = TRUE,
+    show.binned.common.disp.vars = TRUE
+)
+```
+
+```{r volcano, eval=TRUE, warning=FALSE, message=FALSE, fig.cap="Volcano Plot", fig.align="center", out.width="100%"}
+# Create the design matrix
+design <- model.matrix(~sample_metadata$treatment)
+
+# Fit the model
+fit <- edgeR::glmQLFit(d, design)
+
+# Perform the likelihood ratio test
+qlf.cbd_vs_dmso <- edgeR::glmQLFTest(
+    fit,
+    coef = 'sample_metadata$treatmentDMSO'
+)
+
+# Plot the volcano plot
+results <- data.frame(
+    logFC = qlf.cbd_vs_dmso$table$logFC,
+    PValue = qlf.cbd_vs_dmso$table$PValue
+)
+
+results$significant <- ifelse(results$PValue < 0.05, "yes", "no")
+
+ggplot2::ggplot(
+    results,
+    ggplot2::aes(x = logFC, y = -log10(PValue), color = significant)
+) +
+    ggplot2::geom_point(alpha = 0.5) +
+    ggplot2::geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
+    ggplot2::geom_vline(xintercept = c(-1, 1), linetype = "dashed") +
+    ggplot2::labs(
+        title = "Volcano Plot",
+        x = "Log2 Fold Change",
+        y = "-log10 P-Value"
+    ) +
+    ggplot2::theme_minimal()
+```
+
+```{r topgenes, eval=TRUE, warning=FALSE, message=FALSE}
+
+```
+
+## Fitting the Model
+
+```{r fitmodel, eval=TRUE, warning=FALSE, message=FALSE}
+# Fit the model
+fit <- edgeR::glmQLFit(d, design)
+
+# View(design)
+
+# Normalize the data
+norm_counts <- edgeR::cpm(d)
+
+# Perform the likelihood ratio test
+qlf.cbd_vs_dmso <- edgeR::glmQLFTest(
+    fit,
+    coef = ncol(design),
+)
+
+knitr::kable(
+    edgeR::topTags(qlf.cbd_vs_dmso),
+    type = "html",
+    row.names = TRUE
+)
+
+# Get the results
+qlf_output <- edgeR::topTags(
+    qlf.cbd_vs_dmso,
+    sort.by = "PValue",
+    n = nrow(d)
+)
+
+length(which(qlf_output$table$PValue < 0.05))
+length(which(qlf_output$table$FDR < 0.05))
+
+# Extract the top genes
+```
 
 # References
 <div id="refs"></div>
