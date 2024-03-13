@@ -2,7 +2,7 @@
 title: "Assignment 2"
 subtitle: "Analyzing Gene Expression Trends in Cannabidiol (CBD) Treated Cells on SARS-CoV-2 Infection"
 author: "Ashenafee Mandefro"
-date: "03/09/2024"
+date: "03/12/2024"
 bibliography: A2.bib
 output:
     html_document:
@@ -54,19 +54,19 @@ The RNASeq data from this paper is available on the [Gene Expression Omnibus (GE
 
 # Data Preprocessing
 
-## Data Cleaning
-
-The initial phase of data preprocessing consisted of multiple layers of data cleaning. The raw dataset from GEO had 57 832 entries but after cleaning, that was reduced to 20 438 entries. These >20 000 entries were then used in subsequent steps for data normalization and visualization.
-
-## Data Normalization {.tabset .tabset-fade}
-
-The cleaned data was visualized using both a boxplot and a density plot to get a quick overview of the distribution of the data and see if things were indeed normalized successfully.
-
 ```{r load_data, eval=TRUE, warning=FALSE, message=FALSE}
 # Load the RData file
 load("filtered_data_matrix.RData")
 load("samples_type.RData")
 ```
+
+## Data Cleaning
+
+The initial phase of data preprocessing consisted of multiple layers of data cleaning. The raw dataset from GEO had 57 832 entries but after cleaning, that was reduced to `r nrow(filtered_data_matrix)` entries. These >20 000 entries were then used in subsequent steps for data normalization and visualization.
+
+## Data Normalization {.tabset .tabset-fade}
+
+The cleaned data was visualized using both a boxplot and a density plot to get a quick overview of the distribution of the data and see if things were indeed normalized successfully.
 
 ### Boxplot
 
@@ -168,11 +168,14 @@ d <- edgeR::DGEList(
     group = samples_type$treatment
 )
 
+# Create a vector of symbols
+symbols <- as.numeric(factor(sub("\\..*", "", rownames(d$samples))))
+
 # Perform MDS analysis for treatment
 edgeR::plotMDS.DGEList(
     d,
     labels = NULL,
-    pch = 1,
+    pch = symbols,
     col = c("red", "blue")[factor(samples_type$treatment)],
 )
 
@@ -183,7 +186,8 @@ title(main = "MDS Plot by Treatment")
 legend(
     "topright",
     inset=c(-0.75,0.4),
-    legend = levels(factor(samples_type$treatment)),
+    legend = levels(factor(sub("\\..*", "", rownames(d$samples)))),
+    pch = 1:length(levels(factor(sub("\\..*", "", rownames(d$samples))))),
     fill = c("red", "blue"),
     xpd = NA
 )
@@ -200,11 +204,14 @@ d <- edgeR::DGEList(
     group = samples_type$infection
 )
 
+# Create a vector of symbols
+symbols <- as.numeric(factor(sub("\\..*", "", rownames(d$samples))))
+
 # Perform MDS analysis for treatment
 edgeR::plotMDS.DGEList(
     d,
     labels = NULL,
-    pch = 1,
+    pch = symbols,
     col = c("red", "blue")[factor(samples_type$infection)],
 )
 
@@ -215,7 +222,8 @@ title(main = "MDS Plot by Infection")
 legend(
     "topright",
     inset=c(-0.75,0.4),
-    legend = levels(factor(samples_type$infection)),
+    legend = levels(factor(sub("\\..*", "", rownames(d$samples)))),
+    pch = 1:length(levels(factor(sub("\\..*", "", rownames(d$samples))))),
     fill = c("red", "blue"),
     xpd = NA
 )
@@ -227,7 +235,7 @@ legend(
 
 ```{r dispersion, eval=TRUE, warning=FALSE, message=FALSE, fig.cap="Dispersion Plot", fig.align="center", out.width="100%"}
 # Create the design matrix
-design <- model.matrix(~samples_type$treatment)
+design <- model.matrix(~ samples_type$infection + samples_type$treatment)
 d <- edgeR::estimateDisp(d, design)
 
 # Plot the dispersion
@@ -248,90 +256,338 @@ edgeR::plotMeanVar(
 )
 ```
 
-## Counting Significant Genes
+## Examining Different Conditions {.tabset .tabset-fade}
 
-```{r count_sig_genes, eval=TRUE, warning=FALSE, message=FALSE}
+### CBD Healthy vs DMSO Healthy
+
+#### Gene Counts
+
+```{r cbd_healthy_vs_veh_healthy, eval=TRUE, warning=FALSE, message=FALSE}
+# Subset the data
+healthy_data_matrix <- filtered_data_matrix[, grepl("Veh_mock|CBD_mock", colnames(filtered_data_matrix))]
+group <- factor(c(rep("CBD", 3), rep("DMSO", 3)))
+
 # Create the DGEList object and the design matrix
 d <- edgeR::DGEList(
-    counts = as.matrix(filtered_data_matrix),
-    group = samples_type$treatment
+    counts = as.matrix(healthy_data_matrix),
+    group = group
 )
-design <- model.matrix(~samples_type$treatment)
+design <- model.matrix(~group)
 
 # Estimate the dispersion and fit the model
 d <- edgeR::estimateDisp(d, design)
 fit <- edgeR::glmQLFit(d, design)
 
 # Perform the likelihood ratio test
-qlf.cbd_vs_dmso <- edgeR::glmQLFTest(
+qlf.cbd_healthy_vs_veh_healthy <- edgeR::glmQLFTest(
     fit,
-    coef = 'samples_type$treatmentDMSO'
+    coef = 'groupDMSO'
 )
 
 # Extract the most significant genes
-top_cbd_vs_dmso <- edgeR::topTags(qlf.cbd_vs_dmso, n = nrow(d))
-
-# Count the number of significant genes (PValue & FDR) and write the counts in a kable table
-n_sig_genes <- data.frame(
-    PValue = length(which(top_cbd_vs_dmso$table$PValue < 0.05)),
-    FDR = length(which(top_cbd_vs_dmso$table$FDR < 0.05))
+top_cbd_healthy_vs_veh_healthy <- edgeR::topTags(
+    qlf.cbd_healthy_vs_veh_healthy,
+    adjust.method = "BH",
+    n = nrow(d)
 )
 
+# Count the number of significant genes
+n_sig_genes_c1 <- data.frame(
+    PValue = length(which(top_cbd_healthy_vs_veh_healthy$table$PValue < 0.05)),
+    FDR = length(which(top_cbd_healthy_vs_veh_healthy$table$FDR < 0.05))
+)
 knitr::kable(
-    n_sig_genes,
+    n_sig_genes_c1,
     type = "html",
-    row.names = TRUE
+    row.names = TRUE,
+    caption = "CBD Healthy vs DMSO Healthy"
 )
 ```
 
-**1. How many genes are significantly differentially expressed? What thresholds did you use and why?**
+#### Volcano Plot
 
-**2. Which method did you use to adjust for multiple testing and why?**
+```{r volcano_healthy, eval=TRUE, warning=FALSE, message=FALSE, fig.cap="Volcano Plot of Differential Expression between CBD-treated and DMSO-treated Healthy A549 Cells", fig.align="center", out.width="100%"}
+# Define the genes of interest
+genes_of_interest <- c("ERN1", "EIF2AK3", "ATF6")
 
-**3. How many genes passed correction?**
-
-## Differential Expression Visualization
-
-### Volcano Plot
-
-```{r volcano, eval=TRUE, warning=FALSE, message=FALSE, fig.cap="Volcano Plot", fig.align="center", out.width="100%"}
-# Plot the volcano plot
+# Create a data frame of the results
 results <- data.frame(
-    logFC = qlf.cbd_vs_dmso$table$logFC,
-    PValue = qlf.cbd_vs_dmso$table$PValue
+    Gene = rownames(top_cbd_healthy_vs_veh_healthy$table),
+    logFC = top_cbd_healthy_vs_veh_healthy$table$logFC,
+    PValue = top_cbd_healthy_vs_veh_healthy$table$PValue,
+    FDR = top_cbd_healthy_vs_veh_healthy$table$FDR,
+    Significant = ifelse(
+        (top_cbd_healthy_vs_veh_healthy$table$FDR < 0.05) & abs(top_cbd_healthy_vs_veh_healthy$table$logFC) > 1,
+        "Significant",
+        "Not Significant"
+    ),
+    Interest = ifelse(
+        rownames(top_cbd_healthy_vs_veh_healthy$table) %in% genes_of_interest,
+        "Of Interest",
+        "Not of Interest"
+    ),
+    Regulation = ifelse(
+        (top_cbd_healthy_vs_veh_healthy$table$logFC > 1) & (top_cbd_healthy_vs_veh_healthy$table$FDR < 0.05),
+        "Upregulated",
+        ifelse(
+            (top_cbd_healthy_vs_veh_healthy$table$logFC < -1) & (top_cbd_healthy_vs_veh_healthy$table$FDR < 0.05),
+            "Downregulated",
+            "Not Significant"
+        )
+    )
 )
 
-results$significant <- ifelse(results$PValue < 0.05, "yes", "no")
-
+# Plot the volcano plot
 ggplot2::ggplot(
     results,
-    ggplot2::aes(x = logFC, y = -log10(PValue), color = significant)
+    ggplot2::aes(x = logFC, y = -log10(FDR), color = Regulation, shape = Interest)
 ) +
     ggplot2::geom_point(alpha = 0.5) +
+    ggplot2::geom_point(data = subset(results, Interest == "Of Interest"),
+                        ggplot2::aes(fill = Gene), alpha = 1.0, pch = 21) +
     ggplot2::geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
     ggplot2::geom_vline(xintercept = c(-1, 1), linetype = "dashed") +
     ggplot2::labs(
-        title = "Volcano Plot",
+        title = "Expression in CBD-treated vs DMSO-treated Healthy A549 Cells",
         x = "Log2 Fold Change",
-        y = "-log10 P-Value"
+        y = "-log10 FDR",
+        color = "Significance",
+        fill = "Gene",
+        shape = "Gene of Interest"
     ) +
+    ggplot2::scale_color_manual(values = c("Upregulated" = "red", "Downregulated" = "hotpink", "Not Significant" = "grey")) +
+    ggplot2::scale_fill_manual(values = c("ERN1" = "purple", "EIF2AK3" = "cyan", "ATF6" = "green")) +
+    ggplot2::scale_shape_manual(values = c(16, 17)) +
     ggplot2::theme_minimal()
 ```
+
+### CBD Infection vs CBD Healthy
+
+#### Gene Counts
+
+```{r cbd_infect_vs_cbd_healthy, eval=TRUE, warning=FALSE, message=FALSE}
+# Subset the data
+cbd_data_matrix <- filtered_data_matrix[, grepl("CBD_infect|CBD_mock", colnames(filtered_data_matrix))]
+
+# Create the DGEList object and the design matrix
+group <- factor(c(rep("Infect", 3), rep("Healthy", 3)))
+d <- edgeR::DGEList(
+    counts = as.matrix(cbd_data_matrix),
+    group = group
+)
+design <- model.matrix(~group)
+
+# Estimate the dispersion and fit the model
+d <- edgeR::estimateDisp(d, design)
+fit <- edgeR::glmQLFit(d, design)
+
+# Perform the likelihood ratio test
+qlf.cbd_infect_vs_cbd_healthy <- edgeR::glmQLFTest(
+    fit,
+    coef = 'groupInfect'
+)
+
+# Extract the most significant genes
+top_cbd_infect_vs_cbd_healthy <- edgeR::topTags(
+    qlf.cbd_infect_vs_cbd_healthy,
+    adjust.method = "BH",
+    n = nrow(d)
+)
+
+# Count the number of significant genes
+n_sig_genes_c2 <- data.frame(
+    PValue = length(which(top_cbd_infect_vs_cbd_healthy$table$PValue < 0.05)),
+    FDR = length(which(top_cbd_infect_vs_cbd_healthy$table$FDR < 0.05))
+)
+knitr::kable(
+    n_sig_genes_c2,
+    type = "html",
+    row.names = TRUE,
+    caption = "CBD Infection vs CBD Healthy"
+)
+```
+
+#### Volcano Plot
+
+```{r volcano_cbd, eval=TRUE, warning=FALSE, message=FALSE, fig.cap="Volcano Plot of Differential Expression between Healthy vs. Infected A549 Cells Treated with CBD", fig.align="center", out.width="100%"}
+# Define the genes of interest
+genes_of_interest <- c("ERN1", "EIF2AK3", "ATF6")
+
+# Create a data frame of the results
+results <- data.frame(
+    Gene = rownames(top_cbd_infect_vs_cbd_healthy$table),
+    logFC = top_cbd_infect_vs_cbd_healthy$table$logFC,
+    PValue = top_cbd_infect_vs_cbd_healthy$table$PValue,
+    FDR = top_cbd_infect_vs_cbd_healthy$table$FDR,
+    Significant = ifelse(
+        (top_cbd_infect_vs_cbd_healthy$table$FDR < 0.05) & abs(top_cbd_infect_vs_cbd_healthy$table$logFC) > 1,
+        "Significant",
+        "Not Significant"
+    ),
+    Interest = ifelse(
+        rownames(top_cbd_infect_vs_cbd_healthy$table) %in% genes_of_interest,
+        "Of Interest",
+        "Not of Interest"
+    ),
+    Regulation = ifelse(
+        (top_cbd_infect_vs_cbd_healthy$table$logFC > 1) & (top_cbd_infect_vs_cbd_healthy$table$FDR < 0.05),
+        "Upregulated",
+        ifelse(
+            (top_cbd_infect_vs_cbd_healthy$table$logFC < -1) & (top_cbd_infect_vs_cbd_healthy$table$FDR < 0.05),
+            "Downregulated",
+            "Not Significant"
+        )
+    )
+)
+
+# Plot the volcano plot
+ggplot2::ggplot(
+    results,
+    ggplot2::aes(x = logFC, y = -log10(FDR), color = Regulation, shape = Interest)
+) +
+    ggplot2::geom_point(alpha = 0.5) +
+    ggplot2::geom_point(data = subset(results, Interest == "Of Interest"),
+                        ggplot2::aes(fill = Gene), alpha = 1.0, pch = 21) +
+    ggplot2::geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
+    ggplot2::geom_vline(xintercept = c(-1, 1), linetype = "dashed") +
+    ggplot2::labs(
+        title = "Expression in Healthy vs. Infected A549 Cells Treated with CBD",
+        x = "Log2 Fold Change",
+        y = "-log10 FDR",
+        color = "Significance",
+        fill = "Gene",
+        shape = "Gene of Interest"
+    ) +
+    ggplot2::scale_color_manual(values = c("Upregulated" = "red", "Downregulated" = "hotpink", "Not Significant" = "grey")) +
+    ggplot2::scale_fill_manual(values = c("ERN1" = "purple", "EIF2AK3" = "cyan", "ATF6" = "green")) +
+    ggplot2::scale_shape_manual(values = c(16, 17)) +
+    ggplot2::theme_minimal()
+```
+
+### CBD Infection vs DMSO Infection
+
+#### Gene Counts
+
+```{r cbd_infect_vs_veh_infect, eval=TRUE, warning=FALSE, message=FALSE}
+# Subset the data
+infect_data_matrix <- filtered_data_matrix[, grepl("Veh_infect|CBD_infect", colnames(filtered_data_matrix))]
+group <- factor(c(rep("CBD", 3), rep("DMSO", 3)))
+
+# Create the DGEList object and the design matrix
+d <- edgeR::DGEList(
+    counts = as.matrix(infect_data_matrix),
+    group = group
+)
+design <- model.matrix(~group)
+
+# Estimate the dispersion and fit the model
+d <- edgeR::estimateDisp(d, design)
+fit <- edgeR::glmQLFit(d, design)
+
+# Perform the likelihood ratio test
+qlf.cbd_infect_vs_veh_infect <- edgeR::glmQLFTest(
+    fit,
+    coef = 'groupDMSO'
+)
+
+# Extract the most significant genes
+top_cbd_infect_vs_veh_infect <- edgeR::topTags(
+    qlf.cbd_infect_vs_veh_infect,
+    adjust.method = "BH",
+    n = nrow(d)
+)
+
+# Count the number of significant genes
+n_sig_genes_c3 <- data.frame(
+    PValue = length(which(top_cbd_infect_vs_veh_infect$table$PValue < 0.05)),
+    FDR = length(which(top_cbd_infect_vs_veh_infect$table$FDR < 0.05))
+)
+knitr::kable(
+    n_sig_genes_c3,
+    type = "html",
+    row.names = TRUE,
+    caption = "CBD Infection vs DMSO Infection"
+)
+```
+
+#### Volcano Plot
+
+```{r volcano_infect, eval=TRUE, warning=FALSE, message=FALSE, fig.cap="Volcano Plot of Differential Expression between CBD-treated and DMSO-treated Infected A549 Cells", fig.align="center", out.width="100%"}
+# Define the genes of interest
+genes_of_interest <- c("ERN1", "EIF2AK3", "ATF6")
+
+# Create a data frame of the results
+results <- data.frame(
+    Gene = rownames(top_cbd_infect_vs_veh_infect$table),
+    logFC = top_cbd_infect_vs_veh_infect$table$logFC,
+    PValue = top_cbd_infect_vs_veh_infect$table$PValue,
+    FDR = top_cbd_infect_vs_veh_infect$table$FDR,
+    Significant = ifelse(
+        (top_cbd_infect_vs_veh_infect$table$FDR < 0.05) & abs(top_cbd_infect_vs_veh_infect$table$logFC) > 1,
+        "Significant",
+        "Not Significant"
+    ),
+    Interest = ifelse(
+        rownames(top_cbd_infect_vs_veh_infect$table) %in% genes_of_interest,
+        "Of Interest",
+        "Not of Interest"
+    ),
+    Regulation = ifelse(
+        (top_cbd_infect_vs_veh_infect$table$logFC > 1) & (top_cbd_infect_vs_veh_infect$table$FDR < 0.05),
+        "Upregulated",
+        ifelse(
+            (top_cbd_infect_vs_veh_infect$table$logFC < -1) & (top_cbd_infect_vs_veh_infect$table$FDR < 0.05),
+            "Downregulated",
+            "Not Significant"
+        )
+    )
+)
+
+# Plot the volcano plot
+ggplot2::ggplot(
+    results,
+    ggplot2::aes(x = logFC, y = -log10(FDR), color = Regulation, shape = Interest)
+) +
+    ggplot2::geom_point(alpha = 0.5) +
+    ggplot2::geom_point(data = subset(results, Interest == "Of Interest"),
+                        ggplot2::aes(fill = Gene), alpha = 1.0, pch = 21) +
+    ggplot2::geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
+    ggplot2::geom_vline(xintercept = c(-1, 1), linetype = "dashed") +
+    ggplot2::labs(
+        title = "Expression in CBD-treated vs DMSO-treated Infected A549 Cells",
+        x = "Log2 Fold Change",
+        y = "-log10 FDR",
+        color = "Significance",
+        fill = "Gene",
+        shape = "Gene of Interest"
+    ) +
+    ggplot2::scale_color_manual(values = c("Upregulated" = "red", "Downregulated" = "hotpink", "Not Significant" = "grey")) +
+    ggplot2::scale_fill_manual(values = c("ERN1" = "purple", "EIF2AK3" = "cyan", "ATF6" = "green")) +
+    ggplot2::scale_shape_manual(values = c(16, 17)) +
+    ggplot2::theme_minimal()
+```
+
+## Further Analysis of Differential Expression
+
+From the conditions examined above, we will proceed with the **CBD Infection vs CBD Healthy** condition for further analysis.
 
 ### Heatmap
 
 ```{r heatmap, eval=TRUE, warning=FALSE, message=FALSE, fig.cap="Heatmap of Significantly Differentially Expressed Genes", fig.align="center", out.width="100%"}
+# Subset the data
+cbd_data_matrix <- filtered_data_matrix[, grepl("CBD_infect|CBD_mock", colnames(filtered_data_matrix))]
+
 # Create a numerical matrix of our count data
-heatmap_matrix <- as.matrix(filtered_data_matrix)
+heatmap_matrix <- as.matrix(cbd_data_matrix)
 
 # Set the row names to be the gene names
-rownames(heatmap_matrix) <- rownames(filtered_data_matrix)
+rownames(heatmap_matrix) <- rownames(cbd_data_matrix)
 
 # Set the column names to be the sample names
-colnames(heatmap_matrix) <- colnames(filtered_data_matrix)
+colnames(heatmap_matrix) <- c("CBD + SARS-CoV-2", "CBD + SARS-CoV-2", "CBD + SARS-CoV-2", "CBD + Mock", "CBD + Mock", "CBD + Mock")
 
 # Get the row names of the significantly differentially expressed genes
-sig_genes <- rownames(qlf.cbd_vs_dmso$table[top_cbd_vs_dmso$table$FDR < 0.05, ])
+sig_genes <- rownames(qlf.cbd_infect_vs_cbd_healthy$table[top_cbd_infect_vs_cbd_healthy$table$FDR < 0.05, ])
 
 # Subset the matrix to only include the significantly differentially expressed genes
 heatmap_matrix <- heatmap_matrix[sig_genes, ]
@@ -352,19 +608,499 @@ if (min(heatmap_matrix) < 0) {
     )
 }
 
+# Create an annotation data frame
+annotation_df <- data.frame(
+    CBD = c(rep("+", 6)),
+    `SARS-CoV-2` = c(rep("+", 3), rep("-", 3)),
+    stringsAsFactors = FALSE
+)
+annotation_colours <- list(
+    CBD = c("+" = "purple"),
+    `SARS-CoV-2` = c("+" = "green", "-" = "yellow")
+)
+
+# Add the annotation
+heatmap_annotation <- ComplexHeatmap::HeatmapAnnotation(
+    df = annotation_df,
+    col = annotation_colours
+)
+
 # Create the heatmap
 ComplexHeatmap::Heatmap(
     as.matrix(heatmap_matrix),
     col = heatmap_col,
+    name = "Log2 TPM",
     cluster_rows = TRUE,
     cluster_columns = TRUE,
     show_row_dend = TRUE,
     show_column_dend = TRUE,
     show_row_names = FALSE,
-    show_column_names = TRUE,
-    show_heatmap_legend = TRUE
+    show_column_names = FALSE,
+    show_heatmap_legend = TRUE,
+    top_annotation = heatmap_annotation
 )
 ```
+
+### Questions
+
+*The questions below are based on the analysis of the differential expression data comparing the CBD Infection vs CBD Healthy conditions.*
+
+**1. How many genes are significantly differentially expressed? What thresholds did you use and why?**
+
+We used quasi-likelihood (QL) to fit the model and perform the likelihood ratio test. Through the QLF test, we found `r n_sig_genes_c2$PValue` genes were significantly expressed, with a p-value threshold of 0.05. Additionally, we also observed that `r n_sig_genes_c2$FDR` genes passed the False Discovery Rate (FDR) threshold of 0.05.
+
+*FDR Reasoning*: The FDR threshold of 0.05 was selected because initial analysis using 0.01 (as mentioned in the paper) excluded many genes and led to a heatmap where clusters were not as clear. The 0.05 threshold allowed for a more comprehensive analysis of the data.
+
+**2. Which method did you use to adjust for multiple testing and why?**
+
+We used the Benjamini-Hochberg (BH) method to adjust for multiple testing. It is the method discussed in-depth in the lecture material, as well as the method used by the authors in the original work with this dataset (although they don't mention the BH method explicitly, they mention the FDR method which is the same as the BH method)[@nguyenCannabidiolInhibitsSARSCoV22022].
+
+**3. How many genes passed correction? Are any of them genes of interest?**
+
+`r n_sig_genes_c2$FDR` genes passed the FDR correction.
+
+In the publication, Nguyen et al. (2022) specifically discuss the effects of CBD treatment on the endoplasmic reticulum (ER) stress response - a response mediated by IRE1α, PERK, and ATF6. They found that CBD treatment will induce the ER stress response [@nguyenCannabidiolInhibitsSARSCoV22022]. These genes are highlighted in all three volcano plots above (CBD Healthy vs DMSO Healthy, CBD Infection vs CBD Healthy, and CBD Infection vs DMSO Infection).
+
+**4. Do your conditions cluster together in the heatmap?**
+
+The heatmap shows that the samples from the same condition cluster together, indicating that the gene expression profiles are similar within each condition. This clustering indicates that the gene expression profiles are similar within each condition, despite the samples being different.
+
+# Thresholded Over-representation Analysis
+
+Now that we have identified the significantly differentially expressed genes, we will perform a thresholded over-representation analysis (ORA) to identify the biological processes that are enriched in the differentially expressed genes. To do this, we will use `g:Profiler` to perform the ORA.
+
+## Classifying Upregulated and Downregulated Genes
+
+```{r upreg_genes, eval=TRUE, warning=FALSE, message=FALSE}
+# Get which genes are significantly upregulated
+upregulated_genes <- which(top_cbd_infect_vs_cbd_healthy$table$logFC > 0 & top_cbd_infect_vs_cbd_healthy$table$FDR < 0.05)
+upregulated_genes <- top_cbd_infect_vs_cbd_healthy[upregulated_genes,][, c("logFC", "PValue", "FDR")]
+
+# Create a data frame of the upregulated genes
+upregulated_genes <- data.frame(
+    upregulated_genes,
+    row.names = rownames(upregulated_genes)
+)
+
+# Display the first 5 upregulated genes using kable
+knitr::kable(
+    head(upregulated_genes),
+    type = "html",
+    row.names = TRUE,
+    caption = "Upregulated Genes"
+)
+```
+
+```{r downreg_genes, eval=TRUE, warning=FALSE, message=FALSE}
+# Get which genes are significantly downregulated
+downregulated_genes <- which(top_cbd_infect_vs_cbd_healthy$table$logFC < 0 & top_cbd_infect_vs_cbd_healthy$table$FDR < 0.05)
+downregulated_genes <- top_cbd_infect_vs_cbd_healthy[downregulated_genes,][, c("logFC", "PValue", "FDR")]
+
+# Create a data frame of the downregulated genes
+downregulated_genes <- data.frame(
+    downregulated_genes,
+    row.names = rownames(downregulated_genes)
+)
+
+# Display the first 5 downregulated genes using kable
+knitr::kable(
+    head(downregulated_genes),
+    type = "html",
+    row.names = TRUE,
+    caption = "Downregulated Genes"
+)
+```
+
+## Querying g:Profiler {.tabset .tabset-fade}
+
+```{r overrepresentation, eval=TRUE, warning=FALSE, message=FALSE}
+# Get vectors of the upregulated and downregulated genes
+upreg <- rownames(upregulated_genes)
+downreg <- rownames(downregulated_genes)
+
+# Query g:Profiler
+gprofiler_results <- gprofiler2::gost(
+    query = list(
+        up = upreg,
+        down = downreg
+    ),
+    organism = "hsapiens",
+    sources = c("GO:BP", "REAC", "WP"),
+    correction_method = "fdr",
+    exclude_iea = TRUE,
+    ordered_query = FALSE,
+    significant = FALSE
+)
+
+# Query g:Profiler (upregulated only)
+gprofiler_results_upreg <- gprofiler2::gost(
+    query = list(
+        up = upreg
+    ),
+    organism = "hsapiens",
+    sources = c("GO:BP", "REAC", "WP"),
+    correction_method = "fdr",
+    exclude_iea = TRUE,
+    ordered_query = FALSE,
+    significant = FALSE
+)
+
+# Query g:Profiler (downregulated only)
+gprofiler_results_downreg <- gprofiler2::gost(
+    query = list(
+        down = downreg
+    ),
+    organism = "hsapiens",
+    sources = c("GO:BP", "REAC", "WP"),
+    correction_method = "fdr",
+    exclude_iea = TRUE,
+    ordered_query = FALSE,
+    significant = FALSE
+)
+
+# Rename the results
+results <- gprofiler_results$result
+
+# Subset the upregulated results
+upreg_results <- results[results$query == "up", ]
+upreg_results_only <- gprofiler_results_upreg$result
+
+# Subset the downregulated results
+downreg_results <- results[results$query == "down", ]
+downreg_results_only <- gprofiler_results_downreg$result
+```
+
+### Overview
+
+```{r gprofiler_overview, eval=TRUE, warning=FALSE, message=FALSE}
+# Create a data frame to store the number of upregulated and downregulated genes
+gene_counts <- data.frame(
+    Upregulated = nrow(upreg_results),
+    `Upregulated (Only)` = nrow(upreg_results_only),
+    Downregulated = nrow(downreg_results),
+    `Downregulated (Only)` = nrow(downreg_results_only)
+)
+
+# Display the overview of the g:Profiler results using kable
+knitr::kable(
+    gene_counts,
+    type = "html",
+    row.names = TRUE,
+    caption = "Overview of g:Profiler Results"
+)
+```
+
+```{r gprofiler_sources, eval=TRUE, warning=FALSE, message=FALSE}
+# Get the number of terms from each source
+sources <- table(results$source)
+sources <- as.data.frame(sources)
+colnames(sources) <- c("Source", "Number of Terms")
+
+# Display the number of terms from each source using kable
+knitr::kable(
+    sources,
+    type = "html",
+    row.names = FALSE,
+    caption = "Number of Terms from Each Source (Both)"
+)
+```
+
+### Upregulated Results
+    
+```{r upreg_results, eval=TRUE, warning=FALSE, message=FALSE}
+# Display the upregulated results using kable
+knitr::kable(
+    head(upreg_results),
+    type = "html",
+    row.names = FALSE,
+    caption = "Upregulated Results from g:Profiler"
+)
+```
+
+```{r upreg_sources, eval=TRUE, warning=FALSE, message=FALSE}
+# Get the number of terms from each source
+upreg_sources <- table(upreg_results$source)
+upreg_sources <- as.data.frame(upreg_sources)
+colnames(upreg_sources) <- c("Source", "Number of Terms")
+
+# Display the number of terms from each source using kable
+knitr::kable(
+    upreg_sources,
+    type = "html",
+    row.names = FALSE,
+    caption = "Number of Terms from Each Source (Upregulated)"
+)
+```
+
+```{r upreg_sources_only, eval=TRUE, warning=FALSE, message=FALSE}
+# Get the number of terms from each source
+upreg_sources_only <- table(upreg_results_only$source)
+upreg_sources_only <- as.data.frame(upreg_sources_only)
+colnames(upreg_sources_only) <- c("Source", "Number of Terms")
+
+# Display the number of terms from each source using kable
+knitr::kable(
+    upreg_sources_only,
+    type = "html",
+    row.names = FALSE,
+    caption = "Number of Terms from Each Source (Upregulated Only)"
+)
+```
+
+### Downregulated Results
+
+```{r downreg_results, eval=TRUE, warning=FALSE, message=FALSE}
+# Display the downregulated results using kable
+knitr::kable(
+    head(downreg_results),
+    type = "html",
+    row.names = FALSE,
+    caption = "Downregulated Results from g:Profiler"
+)
+```
+
+```{r downreg_sources, eval=TRUE, warning=FALSE, message=FALSE}
+# Get the number of terms from each source
+downreg_sources <- table(downreg_results$source)
+downreg_sources <- as.data.frame(downreg_sources)
+colnames(downreg_sources) <- c("Source", "Number of Terms")
+
+# Display the number of terms from each source using kable
+knitr::kable(
+    downreg_sources,
+    type = "html",
+    row.names = FALSE,
+    caption = "Number of Terms from Each Source (Downregulated)"
+)
+```
+
+```{r downreg_sources_only, eval=TRUE, warning=FALSE, message=FALSE}
+# Get the number of terms from each source
+downreg_sources_only <- table(downreg_results_only$source)
+downreg_sources_only <- as.data.frame(downreg_sources_only)
+colnames(downreg_sources_only) <- c("Source", "Number of Terms")
+
+# Display the number of terms from each source using kable
+knitr::kable(
+    downreg_sources_only,
+    type = "html",
+    row.names = FALSE,
+    caption = "Number of Terms from Each Source (Downregulated Only)"
+)
+```
+
+## Over-representation Analysis
+
+### Filtering the Results {.tabset .tabset-fade}
+
+Since there are `r nrow(upreg_results)` significant terms for the upregulated genes and `r nrow(downreg_results)` significant terms for the downregulated genes, we need to filter our results to ensure we are only examining relevant terms.
+
+```{r filter_results, eval=TRUE, warning=FALSE, message=FALSE}
+# Filter the results to only include results with at least 200 terms
+results_filtered <- results[results$term_size < 500, ]
+upreg_results_filtered <- upreg_results[upreg_results$term_size < 500, ]
+upreg_results_only_filtered <- upreg_results_only[upreg_results_only$term_size < 500, ]
+downreg_results_filtered <- downreg_results[downreg_results$term_size < 500, ]
+downreg_results_only_filtered <- downreg_results_only[downreg_results_only$term_size < 500, ]
+
+# Display the number of significant terms before and after filtering using kable
+gene_counts_both <- data.frame(
+    Regulated = nrow(results),
+    Upregulated = nrow(upreg_results),
+    Downregulated = nrow(downreg_results),
+    `Regulated (Filtered)` = nrow(results_filtered),
+    `Upregulated (Filtered)` = nrow(upreg_results_filtered),
+    `Downregulated (Filtered)` = nrow(downreg_results_filtered)
+)
+# Add column names
+knitr::kable(
+    gene_counts_both,
+    type = "html",
+    row.names = FALSE,
+    caption = "Overview of g:Profiler Results"
+)
+```
+
+We see that filtering the results has reduced the number of significant terms by `r nrow(upreg_results) - nrow(upreg_results_filtered)` for the upregulated genes and `r nrow(downreg_results) - nrow(downreg_results_filtered)` for the downregulated genes.
+
+#### Overview (Filtered)
+
+```{r gprofiler_overview_filtered, eval=TRUE, warning=FALSE, message=FALSE}
+# Get the column names we want to display
+reg_cols <- c("term_id", "term_name", "p_value", "intersection_size", "term_size")
+
+# Display the filtered overview of the g:Profiler results using kable
+knitr::kable(
+    head(results_filtered[, reg_cols], 10),
+    type = "html",
+    row.names = FALSE,
+    caption = "Filtered Overview of g:Profiler Results"
+)
+```
+
+#### Upregulated Results (Filtered)
+
+```{r upreg_results_filtered, eval=TRUE, warning=FALSE, message=FALSE}
+# Get the column names we want to display
+upreg_cols <- c("term_id", "term_name", "p_value", "intersection_size", "term_size")
+
+# Sort the results by p-value in ascending order
+upreg_results_filtered <- upreg_results_filtered[order(upreg_results_filtered$p_value), ]
+
+# Display the filtered upregulated results using kable
+knitr::kable(
+    head(upreg_results_filtered[, upreg_cols], 10),
+    type = "html",
+    row.names = FALSE,
+    caption = "Filtered Upregulated Results from g:Profiler"
+)
+```
+
+```{r upreg_sources_filtered, eval=TRUE, warning=FALSE, message=FALSE}
+# Get the number of terms from each source
+upreg_sources <- table(upreg_results_filtered$source)
+upreg_sources <- as.data.frame(upreg_sources)
+colnames(upreg_sources) <- c("Source", "Number of Terms")
+
+# Display the number of terms from each source using kable
+knitr::kable(
+    upreg_sources,
+    type = "html",
+    row.names = FALSE,
+    caption = "Number of Terms from Each Source (Upregulated)"
+)
+```
+
+#### Downregulated Results (Filtered)
+
+```{r downreg_results_filtered, eval=TRUE, warning=FALSE, message=FALSE}
+# Get the column names we want to display
+downreg_cols <- c("term_id", "term_name", "p_value", "intersection_size", "term_size")
+
+# Sort the results by p-value in ascending order
+downreg_results_filtered <- downreg_results_filtered[order(downreg_results_filtered$p_value), ]
+
+# Display the filtered downregulated results using kable
+knitr::kable(
+    head(downreg_results_filtered[, downreg_cols], 10),
+    type = "html",
+    row.names = FALSE,
+    caption = "Filtered Downregulated Results from g:Profiler"
+)
+```
+
+```{r downreg_sources_filtered, eval=TRUE, warning=FALSE, message=FALSE}
+# Get the number of terms from each source
+downreg_sources <- table(downreg_results_filtered$source)
+downreg_sources <- as.data.frame(downreg_sources)
+colnames(downreg_sources) <- c("Source", "Number of Terms")
+
+# Display the number of terms from each source using kable
+knitr::kable(
+    downreg_sources,
+    type = "html",
+    row.names = FALSE,
+    caption = "Number of Terms from Each Source (Downregulated)"
+)
+```
+
+### Questions
+
+**1. Which method did you choose and why?**
+
+To perform the over-representation analysis (ORA), I chose to use g:Profiler. This is a tool that I'd been exposed to earlier in the term through one of the [journal assignments](https://github.com/bcb420-2024/Ashenafee_Mandefro/wiki/8-%E2%80%90-Getting-acquainted-with-using-G%3AProfiler). Although I had experience using it via the web interface, picking it up for use in this R pipeline wasn't too difficult.
+
+From the experience using it before (although briefly), I knew that this tool offered a gateway to comprehensive functional annotations on many genes, given its connection to a wide range of databases, such as [WikiPathways](https://www.wikipathways.org/) and [Reactome](https://reactome.org/), as well as the integration of field-standards such as Gene Ontology (GO) terms.
+
+**2. What annotation data did you use and why? What version of the annotation are you using?**
+
+I used the following annotation sources:
+
+- Gene Ontology Biological Process (GO:BP), Version `releases/2024-01-17`
+- Reactome (REAC), Version `2024-1-25`
+- WikiPathways (WP), Version `20240101`
+
+The GO:BP terms are a standard for annotating genes with their biological process, regardless of the source of data. On the other hand, Reactome and WikiPathways are databases that provide curated pathways for human biology. Furthermore, we were exposed to these annotation sources via the g:Profiler journal assignment.
+
+The version numbers were found by accessing the [g:Profiler web interface](https://biit.cs.ut.ee/gprofiler/gost) and checking the version numbers of the annotation sources.
+
+**3. How many genesets were returned with what thresholds?**
+
+```{r genesets, eval=TRUE, warning=FALSE, message=FALSE}
+genesets <- data.frame(
+    Upregulated = nrow(upreg_results_filtered),
+    Downregulated = nrow(downreg_results_filtered),
+    Threshold = 500
+)
+knitr::kable(
+    genesets,
+    type = "html",
+    row.names = FALSE,
+    caption = "Number of Genesets Returned with a Threshold of 500"
+)
+```
+
+**4. How do results differ if you were to run the analysis on the entire dataset instead of on upregulated and downregulated genes separately?**
+
+<!-- link to section ### Upregulated Results -->
+A run of g:Profiler using the entire dataset would return `r nrow(upreg_results)` significant terms for the upregulated genes and `r nrow(downreg_results)` significant terms for the downregulated genes. However, querying for upregulated genes only would return `r nrow(upreg_results_only)` significant terms, and querying for downregulated genes only would return `r nrow(downreg_results_only)` significant terms.
+
+There is no difference in the total number of terms returned, with the counts of each annotation source being retained regardless of the method used as well:
+
+```{r sources_comparison, eval=TRUE, warning=FALSE, message=FALSE}
+# Get the sources for upreg_results_only_filtered
+upreg_sources_only <- table(upreg_results_only_filtered$source)
+upreg_sources_only <- as.data.frame(upreg_sources_only)
+colnames(upreg_sources_only) <- c("Source", "Number of Terms")
+
+# Get the sources for downreg_results_only_filtered
+downreg_sources_only <- table(downreg_results_only_filtered$source)
+downreg_sources_only <- as.data.frame(downreg_sources_only)
+colnames(downreg_sources_only) <- c("Source", "Number of Terms")
+
+# Create a data frame to store the number of terms from each source
+sources_comparison <- data.frame(
+    Source = c("GO:BP", "REAC", "WP"),
+    `NoT (Upregulated)` = c(
+        upreg_sources[upreg_sources$Source == "GO:BP", "Number of Terms"],
+        upreg_sources[upreg_sources$Source == "REAC", "Number of Terms"],
+        upreg_sources[upreg_sources$Source == "WP", "Number of Terms"]
+    ),
+    `NoT (Upregulated Only)` = c(
+        upreg_sources_only[upreg_sources_only$Source == "GO:BP", "Number of Terms"],
+        upreg_sources_only[upreg_sources_only$Source == "REAC", "Number of Terms"],
+        upreg_sources_only[upreg_sources_only$Source == "WP", "Number of Terms"]
+    ),
+    `NoT (Downregulated)` = c(
+        downreg_sources[downreg_sources$Source == "GO:BP", "Number of Terms"],
+        downreg_sources[downreg_sources$Source == "REAC", "Number of Terms"],
+        downreg_sources[downreg_sources$Source == "WP", "Number of Terms"]
+    ),
+    `NoT (Downregulated Only)` = c(
+        downreg_sources_only[downreg_sources_only$Source == "GO:BP", "Number of Terms"],
+        downreg_sources_only[downreg_sources_only$Source == "REAC", "Number of Terms"],
+        downreg_sources_only[downreg_sources_only$Source == "WP", "Number of Terms"]
+    )
+)
+
+# Display the number of terms from each source using kable
+knitr::kable(
+    sources_comparison,
+    type = "html",
+    row.names = FALSE,
+    caption = "Number of Terms (NoT) from Differing Methods"
+)
+```
+
+# Interpretation
+
+**1. Do the ORA results support conclusions or mechanism discussed in the original paper?**
+
+The results do not immediately support conclusions/mechanisms discussed in the paper. The authors found that CBD treatment inhibits SARS-CoV-2 replication in lung epithelial cells [@nguyenCannabidiolInhibitsSARSCoV22022]. The most significant hits for the upregulated genes mainly have to do with responses to the pathways which growth factor beta (TGF-β) is involved in. However, the most significant terms which the downregulated genes were associated with had to do with the cell cycle and replication, mainly chromosome separation and nuclear division. This could be interpreted as a potential mechanism for the inhibition of SARS-CoV-2 replication, as the downregulation of these genes could lead to a decrease in the replication of cells infected with SARS-CoV-2.
+
+**2. Can you find evidence to support some of the results that you see? How does this evidence support your results?**
+
+Literature does mention that TGF-β is involved in the regulation of the immune system, with effects such as mediating lymphocyte proliferation [@liTransformingGrowthFactorbeta2006]. The upregulation of genes involved in the TGF-β pathway could be interpreted as a response to the infection of the cells with SARS-CoV-2, with the immune system "kicking in" at a larger scale from the CBD treatment.
 
 # References
 <div id="refs"></div>
