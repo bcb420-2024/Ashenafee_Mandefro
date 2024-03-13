@@ -3,7 +3,7 @@ title: "Assignment 2"
 subtitle: "Analyzing Gene Expression Trends in Cannabidiol (CBD) Treated Cells on SARS-CoV-2 Infection"
 author: "Ashenafee Mandefro"
 date: "03/12/2024"
-bibliography: A2.bib
+bibliography: A2_Ashenafee.bib
 output:
     html_document:
         toc: true
