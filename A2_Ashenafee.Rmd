@@ -54,7 +54,39 @@ The RNASeq data from this paper is available on the [Gene Expression Omnibus (GE
 
 # Data Preprocessing
 
+```{r install_dependencies, eval = TRUE, message = FALSE}
+# Check if Biocondutor is installed
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+# Install knitr
+if (!requireNamespace("knitr", quietly = TRUE))
+    install.packages("knitr")
+
+# Install GEOquery
+if (!requireNamespace("GEOquery", quietly = TRUE))
+    BiocManager::install("GEOquery")
+
+# Install edgeR
+if (!requireNamespace("edgeR", quietly = TRUE))
+    BiocManager::install("edgeR")
+
+# Install gprofiler2
+if (!requireNamespace("gprofiler2", quietly = TRUE))
+    BiocManager::install("gprofiler2")
+```
+
 ```{r load_data, eval=TRUE, warning=FALSE, message=FALSE}
+# Download the .RData from GitHub
+download.file(
+    url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Assignment%202/filtered_data_matrix.RData",
+    destfile = "filtered_data_matrix.RData"
+)
+download.file(
+    url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Assignment%202/samples_type.RData",
+    destfile = "samples_type.RData"
+)
+
 # Load the RData file
 load("filtered_data_matrix.RData")
 load("samples_type.RData")
