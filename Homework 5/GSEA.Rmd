@@ -1,0 +1,92 @@
+---
+title: "Homework 5"
+author: "Ashenafee Mandefro"
+date: "3/19/2024"
+---
+
+First we need to install the pre-requisite packages for the GSEA analysis. The RCurl package is required for downloading the GMT file from the Bader Lab website.
+```{r install}
+# Install the pre-requisite packages
+tryCatch(
+    expr = {
+        library("RCurl")
+    },
+    error = function(e) {
+        install.packages("RCurl")
+    },
+    finally = library("RCurl")
+)
+```
+
+After installing and loading the pre-requisite packages, we can move to setting up the paths we'll need for the GSEA analysis.
+```{r paths}
+# Set the path to the GSEA jar file
+gsea_jar <- "/home/rstudio/projects/Homework_5/GSEA_4.3.3/gsea-cli.sh"
+
+# Set the path to the working directory containing the data
+working_dir <- "/home/rstudio/projects/Homework_5/data/"
+
+# Set the path to the output directory
+output_dir <- "/home/rstudio/projects/Homework_5/generated_data/gsea"
+
+# Create the output directory if it doesn't exist
+if (!dir.exists(output_dir)) {
+    dir.create(output_dir, recursive = TRUE)
+}
+
+# Set the path to the rank file
+rnk_file <- "/home/rstudio/projects/Homework_5/data/MesenvsImmuno_RNASeq_ranks.rnk"
+```
+
+
+Once the paths are set, we can download the latest GMT file from the Bader Lab website. The GMT file contains the gene sets that will be used for the GSEA analysis. We only care about including the GO Biological Process gene sets, while excluding terms inferred from electronic annotations (IEA). Furthermore, the GMT will only be downloaded if it doesn't already exist, to avoid any duplication of data.
+```{r download_gmt}
+# Set the base URL for the latest GMT files from the Bader Lab
+gmt_url <- "https://download.baderlab.org/EM_Genesets/March_01_2021/Human/symbol/"
+
+filenames <- getURL(gmt_url)
+tc <- textConnection(filenames)
+contents <- readLines(tc)
+close(tc)
+
+# Fetch the GMT file for the GO Biological Process gene sets from March 1, 2021
+rx <- gregexpr(
+    "(?<=<a href=\")(.*.GOBP_AllPathways_no_GO_iea.*.)(.gmt)(?=\">)",
+    contents,
+    perl = TRUE
+)
+gmt_file <- unlist(regmatches(contents, rx))
+
+# Set the destination path for the GMT file
+dest_gmt_file <- file.path(output_dir, gmt_file)
+
+# Check if the file exists. If not, download it
+if (!file.exists(dest_gmt_file)) {
+    download.file(
+        paste(gmt_url, gmt_file, sep = ""),
+        destfile = dest_gmt_file
+    )
+}
+```
+
+With our data prepared and locally available, we can proceed to running the analysis with the GSEA program.
+```{r run_gsea}
+# Build the command for running GSEA
+command <- paste(
+    gsea_jar,
+    "GSEAPreRanked -gmx",
+    dest_gmt_file,
+    "-rnk",
+    rnk_file,
+    "-collapse false -nperm 1000 -scoring_scheme weighted",
+    "-rpt_label ",
+    "Mesen_vs_Immuno",
+    "  -plot_top_x 20 -rnd_seed 12345  -set_max 200",
+    " -set_min 15 -zip_report false ",
+    " -out",
+    output_dir,
+    " > gsea_output.txt",
+    sep = " "
+)
+system(command)
+```
