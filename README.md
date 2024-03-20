@@ -25,6 +25,7 @@ In addition to assignments, there are also homework sets to complete. Many of th
 | 2 | Dataset Selection & Initial Processing | [Journal](https://github.com/bcb420-2024/Ashenafee_Mandefro/wiki/5-%E2%80%90-Searching-for-and-selecting-a-dataset) |
 | 3 | Annotation Sources | [Journal](https://github.com/bcb420-2024/Ashenafee_Mandefro/wiki/7-%E2%80%90-Searching-for-and-selecting-an-annotation-source) |
 | 4 | G:Profiler | [Journal](https://github.com/bcb420-2024/Ashenafee_Mandefro/wiki/8-%E2%80%90-Getting-acquainted-with-using-G%3AProfiler) |
+| 5 | GSEA | [Journal](https://github.com/bcb420-2024/Ashenafee_Mandefro/wiki/10-%E2%80%90-Getting-Started-with-GSEA) |
 
 # License
 
