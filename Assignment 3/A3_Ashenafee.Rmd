@@ -1,0 +1,19 @@
+---
+title: "Assignment 3"
+subtitle: "Non-thresholded GSEA and Network Visualization of CBD Treatment for SARS-CoV-2 Infection"
+author: "Ashenafee Mandefro"
+date: "04/01/2024"
+bibliography: A3_Ashenafee.bib
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        number_sections: false
+        theme: journal
+        highlight: tango
+        code_folding: hide
+        df_print: paged
+        self_contained: no
+csl: cse.csl
+nocite: '@*'
+---
