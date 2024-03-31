@@ -14,6 +14,7 @@ Below is a table of my assignments and the link to both the RMarkdown document a
 | ---------- | ------------------------------ | ----- |
 | A1         | Dataset Selection & Processing | [RMarkdown](https://github.com/bcb420-2024/Ashenafee_Mandefro/blob/main/Assignment%201/A1_Notebook.Rmd) \| [HTML](https://github.com/bcb420-2024/Ashenafee_Mandefro/blob/main/Assignment%201/A1_Notebook.html) |
 | A2         | DE Analysis & Preliminary ORA  | [RMarkdown](https://github.com/bcb420-2024/Ashenafee_Mandefro/blob/main/A2_Ashenafee.Rmd) \| [HTML](https://github.com/bcb420-2024/Ashenafee_Mandefro/blob/main/A2_Ashenafee.html) |
+| A3         | GSEA & Pathway Enrichment      | [RMarkdown](#) \| [HTML](#) |
 
 # Homework
 
