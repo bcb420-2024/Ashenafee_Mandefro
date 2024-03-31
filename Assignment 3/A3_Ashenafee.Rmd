@@ -17,3 +17,296 @@ output:
 csl: cse.csl
 nocite: '@*'
 ---
+
+<!-- R Setup -->
+```{r install_dependencies, eval = TRUE, message = FALSE}
+# Check if Biocondutor is installed
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+# Install knitr
+if (!requireNamespace("knitr", quietly = TRUE))
+    install.packages("knitr")
+
+# Install GEOquery
+if (!requireNamespace("GEOquery", quietly = TRUE))
+    BiocManager::install("GEOquery")
+
+# Install edgeR
+if (!requireNamespace("edgeR", quietly = TRUE))
+    BiocManager::install("edgeR")
+
+# Install gprofiler2
+if (!requireNamespace("gprofiler2", quietly = TRUE))
+    BiocManager::install("gprofiler2")
+```
+
+<!-- Loading Data -->
+```{r load_data, eval=TRUE, warning=FALSE, message=FALSE}
+# Download the .RData from GitHub
+download.file(
+    url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Assignment%202/filtered_data_matrix.RData",
+    destfile = "filtered_data_matrix.RData"
+)
+download.file(
+    url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Assignment%202/samples_type.RData",
+    destfile = "samples_type.RData"
+)
+
+# Load the RData file
+load("filtered_data_matrix.RData")
+load("samples_type.RData")
+```
+
+<!-- Setup Directories -->
+```{r setup_directories, eval=TRUE, warning=FALSE, message=FALSE}
+# Create the data directory if it doesn't exist
+if (!dir.exists("data")) {
+    dir.create("data")
+}
+data_dir <- paste0(getwd(), "/data")
+```
+
+# Introduction
+
+## Background {.tabset .tabset-fade}
+
+### Phytocannabinoids
+
+A phytocannabinoid is a cannabinoid that occurs naturally in plants, such as Cannabis *sativa*. The word "phyto" means "plant", and the prefix "phyto-" is used in biochemistry to refer to compounds derived from plants. These compounds are known to occur in several plant species besides cannabis. The distinction with the prefix "phyto-" must be made because the human body also produces cannabinoids, referred to as *endo*cannabinoids due to their endogenous nature.
+
+### Cannabidiol (CBD)
+
+Cannabidiol (CBD) is one of the numerous phytocannabinoids found in the Cannabis (Cannabis sativa) plant. However, it is not responsible for the "high" commonly associated with use of cannabis - that responsibility falls on delta-9 tetrohydrocannabinol (THC). CBD is a non-psychoactive compound, and has been shown to have a wide range of potential therapeutic properties, including anti-inflammatory, antioxidant, and neuroprotective effects [@atalayAntioxidativeAntiInflammatoryProperties2019; @cassanoCannabisSativaCannabidiol2020]. It has showed promise as a possible treatment for a variety of conditions, including epilepsy, anxiety, and chronic pain [@bonaccorsoCannabidiolCBDUse2019].
+
+### SARS-CoV-2
+
+A highly contagious virus, SARS-CoV-2 is the driving force behind the COVID-19 pandemic. It is a novel coronavirus that was first identified in December 2019 in Wuhan, China, and is primarily spread through respiratory droplets. Those who have been infected with the virus can experience a wide range of symptoms, from mild to severe, with the worst outcome being death. Due to its extreme impact on public health, global economy, and daily life, significant amounts of research went into treatment/prevention methods for the virus from 2020 to 2022.
+
+## Primary Research
+
+### Quick Summary of the Paper
+
+[Cannabidiol Inhibits SARS-CoV-2 Replication through Induction of the Host ER Stress and Innate Immune Responses](https://www.science.org/doi/10.1126/sciadv.abi6110) discusses the effects of CBD treatment in SARS-CoV-2 infected cells and mice, through its action of preventing replication of the virus. The researchers found that these effects are apparent in lung epithelial cells which is a critical finding, given that SARS-CoV-2 manifests itself with many respiratory issues[@nguyenCannabidiolInhibitsSARSCoV22022].
+
+### Data Overview
+
+The RNASeq data from this paper is available on the [Gene Expression Omnibus (GEO)](https://www.ncbi.nlm.nih.gov/geo/) under the accession number [GSE168797](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE168797). More information about the data is summarized in the table below:
+
+| Attribute    | Value |
+|--------|-------|
+| Title  | Cannabidiol Inhibits SARS-CoV-2 Replication through Induction of the Host ER Stress and Innate Immune Responses   |
+| Organism | Homo sapiens |
+| Paper  | Nguyen, L. C., Yang, D., Nicolaescu, V., Best, T. J., Gula, H., Saxena, D., Gabbard, J. D., Chen, S. N., Ohtsuki, T., Friesen, J. B., Drayman, N., Mohamed, A., Dann, C., Silva, D., Robinson-Mailman, L., Valdespino, A., Stock, L., Suárez, E., Jones, K. A., Azizi, S. A., … Rosner, M. R. (2022). Cannabidiol inhibits SARS-CoV-2 replication through induction of the host ER stress and innate immune responses. Science advances, 8(8), eabi6110. https://doi.org/10.1126/sciadv.abi6110   |
+| Samples | 24 |
+| Status | Public on Jan 20, 2022   |
+
+<!-- Include a brief introduction section with a summary of the normalization and scoring done in the first two assignments. Assume that the person reading the report has not read your assignment #1 or #2 report. Including basic statistics from that analysis will be helpful. (for example, data downloaded from GEO with id X, …) -->
+
+# Data Preparation {.tabset .tabset-fade}
+
+The initial dataset from GEO had 57 832 genes, but after cleaning the dataset, we were left with 20 438 entries for subsequent analyses. The results of processing and normalization were visualized using a boxplot and a density plot to see the distribution of the data. These plots were constructed using the `ggplot2` R package.
+
+## Boxplot
+
+```{r boxplot, fig.cap="Boxplot of the normalized data", fig.align="center", out.width="100%"}
+# Define the log2 TPM
+lg2_tpm <- log2(filtered_data_matrix + 1)
+
+# Set the boxplot colors
+box_colors <- c(rep("red", 6), rep("blue", 6))
+
+# Plot the normalized data
+boxplot(
+    lg2_tpm,
+    xaxt = "n",
+    las = 2,
+    main = "Cannabidiol as COVID Treatment RNASeq Boxplot (Normalized)",
+    ylab = "Log2 TPM",
+    xlab = "Treatment",
+    cex = 0.5,
+    cex.lab = 0.8,
+    col = box_colors
+)
+
+# Draw the median line
+abline(
+    h = median(apply(lg2_tpm, 2, median)),
+    col = "green",
+    lty = 2,
+    lwd = 2
+)
+
+# Add x-axis labels manually with a 45 degree rotation
+text(
+    x = seq_along(lg2_tpm),
+    y = par("usr")[3] - 0.2,
+    adj = 1,
+    srt = 45,
+    labels = colnames(lg2_tpm),
+    xpd = TRUE,
+    cex = 0.8
+)
+
+# Add a legend (red - SAR-CoV-2, blue - Mock)
+legend(
+    "topright",
+    legend = c("SARS-CoV-2", "Mock"),
+    fill = c("red", "blue")
+)
+```
+
+## Density Plot
+
+```{r densityplot, fig.cap="Density plot of the normalized data", fig.align="center", out.width="100%"}
+# Density plot
+counts_density <- apply(lg2_tpm, 2, density)
+xlim <- 0
+ylim <- 0
+for (i in seq_along(counts_density)) {
+    xlim <- range(c(xlim, counts_density[[i]]$x))
+    ylim <- range(c(ylim, counts_density[[i]]$y))
+}
+
+cols <- rainbow(length(counts_density))
+ltys <- rep(1, length(counts_density))
+plot(
+    counts_density[[1]],
+    xlim = xlim,
+    ylim = ylim,
+    type = "n",
+    ylab = "Smoothing density of log2-CPM",
+    main = "",
+    cex.lab = 0.85
+)
+for (i in seq_along(counts_density)) {
+    lines(counts_density[[i]], col = cols[i], lty = ltys[i])
+}
+
+legend(
+    "topright",
+    legend = colnames(lg2_tpm),
+    col = cols,
+    lty = ltys,
+    cex = 0.8
+)
+```
+
+# Differential Expression Analysis
+
+We examined the differential expression between CBD-treated and DMSO-treated healthy A549 cells. The analysis was performed using the `edgeR` package in R. The results were visualized using a volcano plot (below) with highlights on three genes mentioned in the original publication: ATF6, EIF2AK3, and ERN1.
+
+## Volcano Plot
+
+<!-- TODO -->
+
+# Thresholded Enrichment Analysis (Over-representation Analysis) {.tabset .tabset-fade}
+
+To examine the biological processes that either have increased or decreased activity from the treatment, we performed an over-representation analysis (ORA) using the `gprofiler2` R package. This method of analysis used a list of the significantly up- and down-regulated genes from the previous DE analysis which passed the the adjusted p-value threshold of 0.05. The results of this analysis gave us insight into which pathways were most affected through the CBD treatment.
+
+The ORA was ran three times with differing input lists to compare and contrast the results of providing `gprofiler2` with up-regulated genes, down-regulated genes, and both up and downregulated genes.
+
+## Upregulated Genes
+
+```{r upregulated_genes, eval=TRUE, warning=FALSE, message=FALSE}
+```
+
+## Downregulated Genes
+
+```{r downregulated_genes, eval=TRUE, warning=FALSE, message=FALSE}
+```
+
+## Both Up and Downregulated Genes
+
+```{r both_up_downregulated_genes, eval=TRUE, warning=FALSE, message=FALSE}
+```
+
+# Non-thresholded Enrichment Analysis (Gene Set Enrichment Analysis)
+
+Given that we have <!-- TODO: Number of non-significantly expressed genes --> genes that were neither significantly upregulated or downregulated, we can perform a gene set enrichment analysis (GSEA) to identify the pathways that may be further affected by this group of genes.
+
+Since GSEA operates under the assumption of microarray data, we must apply some transformations to our data to specify the rank of each gene. The equation for this transformation is below:
+$$\text{Rank} = -\log_{10}(p) \times \text{sign}(LFC)$$
+Where:
+
+- $p$ is the p-value of the gene
+
+- $LFC$ is the log fold change of the gene
+
+## Loading the Gene Sets from the Bader Lab
+
+GSEA comes with its own set of gene sets for the analysis, but they're not frequently updated (i.e., the sets are updated on a near-yearly basis) meaning that some information could be lost if its tied to a newer annotation. The `.gmt` from the Bader Lab contains more pathways and is updated on a monthly basis allowing for more information to be pulled.
+
+For our purposes, we will be using the gene set that *does not* include inferred electronic annotations (IEAs).
+
+```{r load_gene_sets, eval=TRUE, warning=FALSE, message=FALSE}
+download_gmt_file <- function(species) {
+    # Base URL for the Bader Lab downloads website
+    bader_url <- "https://download.baderlab.org/"
+
+    # URL that points to the latest release for the specified species
+    gmt_url <- paste0(
+        bader_url,
+        "EM_Genesets/current_release/",
+        species,
+        "/symbol/"
+    )
+
+    # Fetch a list of files available at the endpoint
+    filenames <- RCurl::getURL(gmt_url)
+    tc <- textConnection(filenames)
+    contents <- readLines(tc)
+    close(tc)
+
+    # Construct the regex pattern to match the .gmt files. It should match:
+    #   - Gene sets with Biological Pathways (BP)
+    #   - Contain all pathways
+    #   - Does NOT contain IEAs from GO
+    #   - Does NOT contain PFOCR
+    rx <- gregexpr(
+        "(?<=<a href=\")(.*.GOBP_AllPathways_noPFOCR_no_GO_iea.*.)(.gmt)(?=\">)",
+        contents,
+        perl = TRUE
+    )
+    gmt_file <- unlist(regmatches(contents, rx))
+
+    # Build the destination location of the file
+    dest_gmt_file <- file.path(data_dir, gmt_file)
+
+    # Download the file
+    download.file(
+        url = paste0(gmt_url, gmt_file),
+        destfile = dest_gmt_file
+    )
+
+    # Return the name of the downloaded file
+    return(gmt_file)
+}
+
+# List the files in the data/ directory
+data_files <- list.files(data_dir)
+
+# Check if any of the files are a gene set file
+if (!any(grepl(".gmt", data_files))) {
+    # Download the gene set file
+    gmt_file <- download_gmt_file("Human")
+} else {
+    # Print a message indicating that the file already exists
+    message("Gene set file already exists.")
+}
+```
+We will proceed with using `r gmt_file` as our gene set file.
+
+## Insights
+
+**1. What method was used to perform the GSEA?**
+
+**2. What gene sets did you use for your enrichment analysis?**
+
+**3. Provide a summary of your enrichment results.**
+
+**4. Compare the results of this non-thresholded analysis to the thresholded analysis performed in Assignment 2.**
+
+**5. Explain why or why not comparing a non-thresholded vs. a thresholded analysis is straightforward?**
+
+# Visualization using Cytoscape
