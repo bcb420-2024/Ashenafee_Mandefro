@@ -41,23 +41,6 @@ if (!requireNamespace("gprofiler2", quietly = TRUE))
     BiocManager::install("gprofiler2")
 ```
 
-<!-- Loading Data -->
-```{r load_data, eval=TRUE, warning=FALSE, message=FALSE}
-# Download the .RData from GitHub
-download.file(
-    url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Assignment%202/filtered_data_matrix.RData",
-    destfile = "filtered_data_matrix.RData"
-)
-download.file(
-    url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Assignment%202/samples_type.RData",
-    destfile = "samples_type.RData"
-)
-
-# Load the RData file
-load("filtered_data_matrix.RData")
-load("samples_type.RData")
-```
-
 <!-- Setup Directories -->
 ```{r setup_directories, eval=TRUE, warning=FALSE, message=FALSE}
 # Create the data directory if it doesn't exist
@@ -65,6 +48,87 @@ if (!dir.exists("data")) {
     dir.create("data")
 }
 data_dir <- paste0(getwd(), "/data")
+
+# Create the downloads directory if it doesn't exist
+if (!dir.exists("downloads")) {
+    dir.create("downloads")
+}
+downloads_dir <- paste0(getwd(), "/downloads")
+
+# Create the RData directory in the downloads directory if it doesn't exist
+if (!dir.exists(file.path(downloads_dir, "RData"))) {
+    dir.create(file.path(downloads_dir, "RData"))
+}
+rdata_dir <- file.path(downloads_dir, "RData")
+
+# Create the output directory if it doesn't exist
+if (!dir.exists("output")) {
+    dir.create("output")
+}
+output_dir <- paste0(getwd(), "/output")
+```
+
+<!-- Loading Data -->
+```{r load_data, eval=TRUE, warning=FALSE, message=FALSE}
+# Download the .RData from GitHub
+download.file(
+    url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Assignment%202/filtered_data_matrix.RData",
+    destfile = paste0(rdata_dir, "/filtered_data_matrix.RData")
+)
+download.file(
+    url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Assignment%202/samples_type.RData",
+    destfile = paste0(rdata_dir, "/samples_type.RData")
+)
+download.file(
+    url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Assignment%202/de_results.RData",
+    destfile = paste0(rdata_dir, "/de_results.RData")
+)
+
+# Load the RData files
+load(file.path(rdata_dir, "filtered_data_matrix.RData"))
+load(file.path(rdata_dir, "samples_type.RData"))
+load(file.path(rdata_dir, "de_results.RData"))
+```
+
+<!-- Download the GSEA Executable -->
+```{r download_gsea, eval=TRUE, warning=FALSE, message=FALSE, results="hide"}
+download_and_unzip_gsea <- function() {
+    # Define the URL for the GSEA archive
+    gsea_url <- "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Executables/GSEA_4.3.3.zip"
+
+    # Download the GSEA archive to the downloads directory
+    download.file(
+        url = gsea_url,
+        destfile = file.path(downloads_dir, "GSEA_4.3.3.zip")
+    )
+
+    # Unzip the GSEA archive
+    unzip(
+        zipfile = file.path(downloads_dir, "GSEA_4.3.3.zip"),
+        exdir = downloads_dir
+    )
+
+    # Delete the GSEA archive
+    file.remove(file.path(downloads_dir, "GSEA_4.3.3.zip"))
+    
+    # Define the path to the GSEA executable
+    gsea_executable <- file.path(downloads_dir, "GSEA_4.3.3", "gsea-cli.sh")
+
+    # Make the GSEA executable file executable (i.e., chmod +x)
+    system(paste("chmod +x", shQuote(gsea_executable)))
+
+    # Return the path to the GSEA executable
+    return(gsea_executable)
+}
+
+# Check if GSEA folder already exists in the downloads directory
+if (!dir.exists(file.path(downloads_dir, "GSEA_4.3.3"))) {
+    # Call the function to download and unzip GSEA if necessary
+    gsea_executable <- download_and_unzip_gsea()
+} else {
+    # Define the path to the GSEA executable
+    gsea_executable <- file.path(downloads_dir, "GSEA_4.3.3", "gsea-cli.sh")
+}
 ```
 
 # Introduction
@@ -233,6 +297,25 @@ Where:
 
 - $LFC$ is the log fold change of the gene
 
+```{r rank_genes, eval=TRUE, warning=FALSE, message=FALSE}
+# Rank file should be in the format:
+# GeneName	rank
+# IGDCC3	36.329579739346
+# ANTXR1	35.4794919465309
+# AEBP1	    33.1915895022568
+# ...       ...
+
+# Create a data frame to store the ranks
+rank_df <- data.frame(
+    GeneName = rownames(de_results),
+    Rank = -log10(de_results$PValue) * sign(de_results$logFC)
+)
+
+# Save the ranks to a file
+rank_file <- file.path(data_dir, "CBD_vs_DMSO_rank.rnk")
+write.table(rank_df, rank_file, sep = "\t", row.names = FALSE, quote = FALSE)
+```
+
 ## Loading the Gene Sets from the Bader Lab
 
 GSEA comes with its own set of gene sets for the analysis, but they're not frequently updated (i.e., the sets are updated on a near-yearly basis) meaning that some information could be lost if its tied to a newer annotation. The `.gmt` from the Bader Lab contains more pathways and is updated on a monthly basis allowing for more information to be pulled.
@@ -293,9 +376,49 @@ if (!any(grepl(".gmt", data_files))) {
 } else {
     # Print a message indicating that the file already exists
     message("Gene set file already exists.")
+    # Get the name of the gene set file
+    gmt_file <- data_files[grepl(".gmt", data_files)]
 }
 ```
 We will proceed with using `r gmt_file` as our gene set file.
+
+## Performing the GSEA
+
+We have downloaded the GSEA executable to `downloads/GSEA_X.X.X` (where `X.X.X` is the version number) and made reference to the entrypoint for the program in `gsea_executable`. Before we perform the GSEA, we must store reference to the relevant directories and files the analysis will be using.
+
+```{r setup_gsea, eval=TRUE, warning=FALSE, message=FALSE}
+# Create a directory for the GSEA results within the output directory
+gsea_output_dir <- file.path(output_dir, "gsea_results")
+if (!dir.exists(gsea_output_dir)) {
+    dir.create(gsea_output_dir)
+}
+
+# Name the GSEA analysis
+gsea_analysis_name <- "CBD_vs_DMSO"
+
+# Define the input rank file
+rank_file <- file.path(data_dir, paste0(gsea_analysis_name, "_rank.rnk"))
+
+# Define the GSEA command
+command <- sprintf(
+    "%s GSEAPreRanked -gmx %s -rnk %s -collapse false -nperm 1000 -scoring_scheme weighted -rpt_label %s -plot_top_x 20 -rnd_seed 12345 -set_max 200 -set_min 15 -zip_report false -out %s > gsea_output.txt",
+    shQuote(gsea_executable),
+    shQuote(file.path(data_dir, gmt_file)),
+    shQuote(rank_file),
+    shQuote(gsea_analysis_name),
+    shQuote(gsea_output_dir)
+)
+```
+
+With everything set up, we can now perform our GSEA.
+
+```{r run_gsea, eval=TRUE, warning=FALSE, message=FALSE}
+# Run the GSEA command
+system(command)
+
+# Check if the GSEA results were generated
+gsea_results <- list.files(gsea_output_dir)
+```
 
 ## Insights
 

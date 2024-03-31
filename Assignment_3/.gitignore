@@ -1,0 +1,9 @@
+.lintr
+
+# Exclude the RData files
+*.RData
+
+# Exclude the data, downloads, and output folders
+data/
+downloads/
+output/
