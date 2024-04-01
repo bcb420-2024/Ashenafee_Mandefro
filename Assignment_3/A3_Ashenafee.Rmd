@@ -298,13 +298,6 @@ Where:
 - $LFC$ is the log fold change of the gene
 
 ```{r rank_genes, eval=TRUE, warning=FALSE, message=FALSE}
-# Rank file should be in the format:
-# GeneName	rank
-# IGDCC3	36.329579739346
-# ANTXR1	35.4794919465309
-# AEBP1	    33.1915895022568
-# ...       ...
-
 # Create a data frame to store the ranks
 rank_df <- data.frame(
     GeneName = rownames(de_results),
@@ -312,7 +305,7 @@ rank_df <- data.frame(
 )
 
 # Save the ranks to a file
-rank_file <- file.path(data_dir, "CBD_vs_DMSO_rank.rnk")
+rank_file <- file.path(data_dir, "CBD-Healthy_vs_CBD-Infect_rank.rnk")
 write.table(rank_df, rank_file, sep = "\t", row.names = FALSE, quote = FALSE)
 ```
 
@@ -413,23 +406,92 @@ command <- sprintf(
 With everything set up, we can now perform our GSEA.
 
 ```{r run_gsea, eval=TRUE, warning=FALSE, message=FALSE}
-# Run the GSEA command
-system(command)
+# Check if results already exist
+gsea_result_folder <- list.files(gsea_output_dir)
+if (length(gsea_result_folder) == 0) {
+    # Run the GSEA command
+    system(command)
+} else {
+    message("GSEA results already exist.")
+}
 
-# Check if the GSEA results were generated
-gsea_results <- list.files(gsea_output_dir)
+# Get a list of the TSV files in the GSEA results directory
+gsea_files <- list.files(paste(gsea_output_dir, gsea_result_folder, sep = "/"))
+gsea_files <- gsea_files[grep(".tsv", gsea_files)]
+```
+
+## GSEA Results
+
+```{r gsea_results, eval=TRUE, warning=FALSE, message=FALSE}
+# Find the overall reports of the GSEA
+rx <- gregexpr("gsea_report_for_.*\\.tsv", gsea_files)
+gsea_report_files <- gsea_files[unlist(rx) > 0]
+na_pos_file <- gsea_report_files[grep("na_pos", gsea_report_files)]
+na_neg_file <- gsea_report_files[grep("na_neg", gsea_report_files)]
+
+# Load the GSEA results (.tsv) into a data frame
+na_pos_report <- read.delim(
+    file.path(gsea_output_dir, gsea_result_folder, na_pos_file),
+    sep = "\t"
+)
+na_neg_report <- read.delim(
+    file.path(gsea_output_dir, gsea_result_folder, na_neg_file),
+    sep = "\t"
+)
+
+# Number of upregulated gene sets for both conditions
+num_upreg_pos <- nrow(na_pos_report)
+num_upreg_neg <- nrow(na_neg_report)
+total_genesets <- num_upreg_pos + num_upreg_neg
+
+# Number of gene sets with FDR < 25%
+num_upreg_pos_fdr <- sum(na_pos_report$FDR < 0.25)
+num_upreg_neg_fdr <- sum(na_neg_report$FDR < 0.25)
+
+# Number of gene sets with pvalue < 1%
+num_upreg_pos_pval <- sum(na_pos_report$NOM.p.val < 0.01)
+num_upreg_neg_pval <- sum(na_neg_report$NOM.p.val < 0.01)
+
+# Number of gene sets with pvalue < 5%
+num_upreg_pos_pval_5 <- sum(na_pos_report$NOM.p.val < 0.05)
+num_upreg_neg_pval_5 <- sum(na_neg_report$NOM.p.val < 0.05)
 ```
 
 ## Insights
 
 **1. What method was used to perform the GSEA?**
 
+The GSEA was performed using version 4.3.3 of [GSEA for the command line](). This enrichment analysis was performed on the results of the differential expression analysis between CBD-treated and DMSO-treated healthy A549 cells. This data was transformed to create a rank file based on each gene's p-value and log fold change. The initial, raw RNASeq data was download from GEO with the accession number [GSE168797](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE168797).
+
 **2. What gene sets did you use for your enrichment analysis?**
+
+The gene set used for the enrichment analysis was obtained from the Bader Lab's [curated collection](https://download.baderlab.org/). The gene set file used was ``r gmt_file``. The `.gmt` was the latest release (March 01, 2024 at the time of writing) and contained gene sets for biological pathways that *did not* include inferred electronic annotations (IEAs).
 
 **3. Provide a summary of your enrichment results.**
 
+```{r gsea_summary, eval=TRUE, warning=FALSE, message=FALSE}
+# Create a data frame to store the summary
+gsea_summary <- data.frame(
+    Condition = c("CBD_Infect", "CBD_Healthy"),
+    NumGeneSets = c(num_upreg_pos, num_upreg_neg),
+    NumGeneSetsFDR = c(num_upreg_pos_fdr, num_upreg_neg_fdr),
+    NumGeneSetsPVal = c(num_upreg_pos_pval, num_upreg_neg_pval),
+    NumGeneSetsPVal5 = c(num_upreg_pos_pval_5, num_upreg_neg_pval_5)
+)
+
+# Display the summary
+knitr::kable(
+    gsea_summary,
+    caption = "Summary of the GSEA results for the CBD treatment of SARS-CoV-2 infection."
+)
+```
+
 **4. Compare the results of this non-thresholded analysis to the thresholded analysis performed in Assignment 2.**
 
-**5. Explain why or why not comparing a non-thresholded vs. a thresholded analysis is straightforward?**
+<!-- TODO -->
+
+**5. Is comparing a non-thresholded vs. a thresholded analysis straightforward? Why or why not?**
+
+<!-- TODO -->
 
 # Visualization using Cytoscape
