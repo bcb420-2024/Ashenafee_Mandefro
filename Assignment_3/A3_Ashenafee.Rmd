@@ -28,10 +28,6 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
 if (!requireNamespace("knitr", quietly = TRUE))
     install.packages("knitr")
 
-# Install GEOquery
-if (!requireNamespace("GEOquery", quietly = TRUE))
-    BiocManager::install("GEOquery")
-
 # Install edgeR
 if (!requireNamespace("edgeR", quietly = TRUE))
     BiocManager::install("edgeR")
@@ -39,6 +35,10 @@ if (!requireNamespace("edgeR", quietly = TRUE))
 # Install gprofiler2
 if (!requireNamespace("gprofiler2", quietly = TRUE))
     BiocManager::install("gprofiler2")
+
+# Install RCy3
+if (!requireNamespace("RCy3", quietly = TRUE))
+    BiocManager::install("RCy3")
 ```
 
 <!-- Setup Directories -->
@@ -66,6 +66,12 @@ if (!dir.exists("output")) {
     dir.create("output")
 }
 output_dir <- paste0(getwd(), "/output")
+
+# Create the EM output directory if it doesn't exist
+if (!dir.exists(file.path(output_dir, "em_results"))) {
+    dir.create(file.path(output_dir, "em_results"))
+}
+em_output_dir <- file.path(output_dir, "em_results")
 ```
 
 <!-- Loading Data -->
@@ -88,6 +94,18 @@ download.file(
 load(file.path(rdata_dir, "filtered_data_matrix.RData"))
 load(file.path(rdata_dir, "samples_type.RData"))
 load(file.path(rdata_dir, "de_results.RData"))
+
+# Define the log2 TPM
+lg2_tpm <- log2(filtered_data_matrix + 1)
+
+# Save the expression data to a file
+write.table(
+    lg2_tpm,
+    file = file.path(data_dir, "lg2_tpm.tsv"),
+    sep = "\t",
+    quote = FALSE
+)
+expression_data <- file.path(data_dir, "lg2_tpm.tsv")
 ```
 
 <!-- Download the GSEA Executable -->
@@ -479,6 +497,9 @@ gsea_summary <- data.frame(
     NumGeneSetsPVal5 = c(num_upreg_pos_pval_5, num_upreg_neg_pval_5)
 )
 
+# Update the column names
+colnames(gsea_summary) <- c("Condition", "Total Gene Sets", "Gene Sets (FDR < 25%)", "Gene Sets (p-value < 1%)", "Gene Sets (p-value < 5%)")
+
 # Display the summary
 knitr::kable(
     gsea_summary,
@@ -495,3 +516,468 @@ knitr::kable(
 <!-- TODO -->
 
 # Visualization using Cytoscape
+
+
+## Enrichment Map Setup
+
+Prior to creating our enrichment map (EM), we will setup the thresholds for our analysis. The thresholds will allow us to filter out gene sets that aren't as significant as we need for analysis. We are using the following thresholds:
+
+```{r em_threshold_setup, eval=TRUE, warning=FALSE, message=FALSE}
+# Define the p-value threshold
+pvalue_gsea_threshold <- 1.0
+
+# Define the q-value threshold
+qvalue_gsea_threshold <- 0.05
+
+# Define the similarity threshold
+similarity_threshold <- "0.375"
+
+# Output the thresholds
+knitr::kable(
+    data.frame(
+        PValue = pvalue_gsea_threshold,
+        QValue = qvalue_gsea_threshold,
+        Similarity = similarity_threshold
+    ),
+    caption = "Thresholds used for the Enrichment Map analysis."
+)
+
+#defined threshold for GSEA enrichments 
+#p-value to filter all the genesets.  For example -   1.0
+pvalue_gsea_threshold <- 1.0
+
+#q-value to filter all the genesets.  For example -   0.05
+qvalue_gsea_threshold <- 0.05
+
+#similarity threshold to filter all the genesets connections/edges.  
+# For example -   0.375
+similarity_threshold <- "0.375"
+
+#similarity metric to filter all the genesets connections/edges 
+# (can be OVERLAP, JACCARD, or COMBINED.   For example -   Combined
+similarity_metric = "COMBINED"
+```
+The **p-value** threshold will ensure that only gene sets with a p-value of at most 1.0 will be included in the analysis. In a similar fashion, the **q-value** threshold is used to limit the gene sets in our analysis to those with $q-value < 0.05$.
+
+```{r em_metric_definition, eval=TRUE, warning=FALSE, message=FALSE}
+# Define the similarity metric
+similarity_metric <- "COMBINED"
+```
+**TODO: Figure out similarity**
+
+The **similarity** threshold is used to filter out gene sets that are not similar enough to be connected in the enrichment map. The similarity metric used is **Combined**.
+
+```{r em_input_data_setup, eval=TRUE, warning=FALSE, message=FALSE}
+# Specify the location of the required files:
+#   - .gmt file
+#   - enrichment results
+gmt_file <- file.path(data_dir, gmt_file)
+enrichment_results <- file.path(
+    gsea_output_dir, gsea_result_folder, "edb", "results.edb"
+)
+
+# Specify the location of the required files:
+#   - expression data
+#   - ranks file
+em_expression_data <- shQuote(expression_data)
+ranks_file <- shQuote(rank_file)
+
+# Define the name of the analysis
+em_analysis_name <- "CBD_vs_DMSO"
+```
+
+With the thresholds and input data set, we can now proceed with creating our EM.
+
+## Using Cytoscape
+
+Our network analysis will be ran using Cytoscape and apps that are available through it. As a result, we must first ensure Cytoscape is running and that we can connect to it through its REST API (CyREST) before any analysis can be performed.
+
+```{r connect_to_cytoscape, eval=TRUE, warning=FALSE, message=TRUE}
+# Function to ping Cytoscape using the provided cyrest_url
+#
+# Args:
+#   cyrest_url: The base URL of the Cytoscape REST API
+#
+# Returns:
+#   A logical value indicating whether the ping was successful or not
+ping_cytoscape <- function(cyrest_url) {
+    oldw <- getOption("warn")
+    options(warn = -1)
+    result <- tryCatch({
+        RCy3::cytoscapePing(base.url = cyrest_url)
+        TRUE
+    }, error = function(e) {
+        FALSE
+    })
+    options(warn = oldw)
+    return(result)
+}
+
+# Define the URL for accessing CyREST from Docker
+base_url <- "http://host.docker.internal:1234"
+cyrest_url <- paste0(base_url, "/v1")
+
+# Stop the analysis if Cytoscape is not running
+if (!ping_cytoscape(cyrest_url)) {
+    stop("Cytoscape is not running. Please start Cytoscape and try again.")
+} else {
+    # Output the apiVersion and cytoscapeVersionInfo
+    cat(sprintf(
+        "\tCytoscape API Version: %s\n\tCytoscape Version Info: %s\n",
+        RCy3::cytoscapeVersionInfo(base.url = cyrest_url)["apiVersion"],
+        RCy3::cytoscapeVersionInfo(base.url = cyrest_url)["cytoscapeVersion"]
+    ))
+}
+```
+
+The EM is created through the `enrichmentmap` app available through the Cytoscape App Store. Since it runs through Cytoscape, we must first ensure that Cytoscape is running and that we can connect to it through the REST API (CyREST). Overall, our Cytoscape setup will involve the following steps:
+
+1. Ensure `EnrichmentMap`, `AutoAnnotate`, and any other necessary apps are installed in Cytoscape.
+2. Upload the required files to Cytoscape.
+3. Create the enrichment map.
+4. Export an image of the enrichment map.
+
+### Installing Cytoscape Apps
+
+We use the `installApp` function provided by `RCy3` to install `EnrichmentMap` and `AutoAnnotate`.
+```{r install_cytoscape_apps, eval=TRUE, warning=FALSE, message=TRUE}
+# Wrapper function to install Cytoscape apps using RCy3
+#
+# Args:
+#   cyrest_url: The base URL of the Cytoscape REST API
+#   apps: A list of apps to install
+#
+# Returns:
+#   A list of the newly installed apps
+install_cytoscape_apps <- function(cyrest_url, apps) {
+
+    # Load a list of the currently installed apps
+    installed_apps <- RCy3::getInstalledApps(base.url = cyrest_url)
+    new_apps <- c()
+
+    for (app in apps) {
+        # Check if the app is already installed
+        if (!any(grepl(tolower(app), tolower(installed_apps)))) {
+            RCy3::installApp(app, base.url = cyrest_url)
+            new_apps <- c(new_apps, app)
+        } else {
+            message(sprintf("App '%s' is already installed.", app))
+        }
+    }
+
+    return(new_apps)
+}
+
+# Install the required Cytoscape apps
+apps <- c("enrichmentmap", "autoannotate")
+installed_apps <- RCy3::getInstalledApps(base.url = cyrest_url)
+new_apps <- install_cytoscape_apps(cyrest_url, apps)
+knitr::kable(
+    data.frame(
+        App = new_apps
+    ),
+    caption = "Newly installed Cytoscape apps."
+)
+```
+
+### Uploading Data to Cytoscape
+
+To perform our analysis, we need to provide the following files to Cytoscape:
+
+- The gene set file in `.gmt` format.
+- The enrichment results file.
+- The expression data file.
+- The ranks file.
+
+Since Cytoscape is running on the host operating system, we have to provide it with the input files that were generated in the Docker container. We will use the CyREST API to upload these files to Cytoscape.
+```{r upload_data_to_cytoscape, eval=TRUE, warning=FALSE, message=FALSE}
+# Function to upload data to Cytoscape using the provided cyrest_url
+#
+# Args:
+#   cyrest_url: The base URL of the Cytoscape REST API
+#   files: A list of files to upload
+#
+# Returns:
+#   A logical value indicating whether the upload was successful or not
+upload_data_to_cytoscape <- function(cyrest_url, files) {
+    # Store the uploaded file paths
+    uploaded_paths <- c()
+
+    for (file in files) {
+        # Build the POST request
+        bname <- basename(file)
+        r <- httr::POST(
+            url = paste0(
+                cyrest_url, "/enrichmentmap/textfileupload?fileName=", bname
+            ),
+            config = list(),
+            body = list(file = httr::upload_file(file)),
+            encode = "multipart",
+            handle = NULL
+        )
+
+        # Check if the upload was successful
+        uploaded_paths <- c(uploaded_paths, httr::content(r, "parsed")$path)
+    }
+
+    return(uploaded_paths)
+}
+
+# Upload the required files to Cytoscape
+em_files <- c(gmt_file, enrichment_results, expression_data, rank_file)
+uploaded_files <- upload_data_to_cytoscape(base_url, em_files)
+
+# Store the host file paths
+gmt_file_host <- uploaded_files[1]
+enrichment_results_host <- uploaded_files[2]
+expression_data_host <- uploaded_files[3]
+rank_file_host <- uploaded_files[4]
+```
+
+## Create the Enrichment Map
+
+With the Cytoscape Apps installed and the data imported, we can now move on to creating our EMs. We will create two EMs: one with a q-value threshold of 0.05 and another with a q-value threshold of 0.01. Both EMs will use a p-value threshold of 1.0.
+```{r create_enrichment_map, eval=TRUE, warning=FALSE, message=FALSE}
+# Function to create an enrichment map using the provided cyrest_url
+#
+# Args:
+#   cur_model_name: The name of the current model
+#   pvalue_gsea_threshold: The p-value threshold for the GSEA analysis
+#   qvalue_gsea_threshold: The q-value threshold for the GSEA analysis
+#   similarity_threshold: The similarity threshold for the enrichment map
+#   similarity_metric: The similarity metric for the enrichment map
+#   gsea_ranks_file: The file containing the GSEA ranks
+#   gsea_results_filename: The file containing the GSEA results
+#   expression_file_fullpath: The full path to the expression data file
+#   gmt_gsea_file: The file containing the GSEA gene sets
+#   current_base: The base URL of the Cytoscape REST API
+#
+# Returns:
+#   The response from the Cytoscape REST API
+create_enrichment_map <- function(
+    cur_model_name, pvalue_gsea_threshold, qvalue_gsea_threshold,
+    similarity_threshold, similarity_metric, gsea_ranks_file,
+    gsea_results_filename, expression_file_fullpath, gmt_gsea_file,
+    current_base
+) {
+    # Construct the network name
+    current_network_name <- paste(
+        cur_model_name,
+        pvalue_gsea_threshold,
+        qvalue_gsea_threshold,
+        sep = "_"
+    )
+
+    # Construct the EM command
+    em_command <- paste(
+        'enrichmentmap build analysisType="gsea"',
+        "gmtFile=", gmt_gsea_file,
+        "pvalue=", pvalue_gsea_threshold,
+        "qvalue=", qvalue_gsea_threshold,
+        "similaritycutoff=", similarity_threshold,
+        "coefficients=", similarity_metric,
+        "ranksDataset1=", gsea_ranks_file,
+        "enrichmentsDataset1=", gsea_results_filename,
+        "filterByExpressions=false",
+        "expressionDataset1=", expression_file_fullpath,
+        "gmtFile=", gmt_gsea_file,
+        sep = " "
+    )
+
+    # Execute the EM command
+    response <- RCy3::commandsGET(em_command, base.url = current_base)
+
+    # Initialize network SUID
+    current_network_suid <- 0
+
+    # Check if the command execution failed
+    if (grepl(pattern = "Failed", response)) {
+        return(paste(response))
+    } else {
+        current_network_suid <- response
+    }
+
+    # Check if the network name is unique
+    current_names <- RCy3::getNetworkList(base.url = current_base)
+
+    # If the name already exists, prepend the SUID to the name
+    if (current_network_name %in% current_names) {
+        current_network_name <- paste(
+            current_network_suid,
+            current_network_name,
+            sep = "_"
+        )
+    }
+
+    # Rename the network
+    response <- RCy3::renameNetwork(
+        title = current_network_name,
+        network = as.numeric(current_network_suid),
+        base.url = current_base
+    )
+
+    return(response)
+}
+
+# 1. Initial EM (p = 1.0, q = 0.05)
+em_response <- create_enrichment_map(
+    em_analysis_name, pvalue_gsea_threshold, qvalue_gsea_threshold,
+    similarity_threshold, similarity_metric, rank_file_host,
+    enrichment_results_host, expression_data_host, gmt_file_host,
+    cyrest_url
+)
+em_response_suid <- em_response$network
+
+# 2. More Stringent EM (p = 1.0, q = 0.01)
+em_analysis_name_stringent <- paste0(em_analysis_name, "_stringent")
+em_response_stringent <- create_enrichment_map(
+    em_analysis_name_stringent, pvalue_gsea_threshold, 0.01,
+    similarity_threshold, similarity_metric, rank_file_host,
+    enrichment_results_host, expression_data_host, gmt_file_host,
+    cyrest_url
+)
+em_response_stringent_suid <- em_response_stringent$network
+```
+
+
+```{r export_enrichment_map, eval=TRUE, warning=FALSE, message=FALSE}
+# Function to export the enrichment map as an image
+#
+# Args:
+#   current_base: The base URL of the Cytoscape REST API
+#   current_network_name: The name of the current network
+#   output_dir: The directory to save the image
+#
+# Returns:
+#   The response from the Cytoscape REST API
+export_enrichment_map <- function(
+    current_base, current_network_name, output_dir
+) {
+    # Fit the content
+    RCy3::fitContent(base.url = current_base)
+
+    # Create the full destination
+    output_file <- paste0(
+        output_dir, "/", current_network_name, ".png"
+    )
+
+    # Check to see if the file already exists
+    if (file.exists(output_file)) {
+        # Remove the file
+        file.remove(output_file)
+    }
+
+    # Export the image
+    response <- RCy3::exportImage(
+        output_file,
+        type = "png",
+        base.url = current_base
+    )
+
+    return(response)
+}
+
+# The export_enrichment_map function does not work because of the separation
+# between the host filesystem and Docker's filesystem. As a result, the image
+# for the EM will be fetched from the output/em_results folder since it cannot
+# be generated through this RMarkdown document.
+# export_enrichment_map(
+#     cyrest_url,
+#     paste0(em_analysis_name, "_initial_network.png"),
+#     em_output_dir
+# )
+
+# Fetch the images from the output/em_results folder
+em_image <- file.path(
+    em_output_dir,
+    paste0(em_analysis_name, "_initial_network.png")
+)
+em_image_stringent <- file.path(
+    em_output_dir,
+    paste0(em_analysis_name, "_stringent_network.png")
+)
+
+# TODO: Fix check for if image exists (this checks for wrong thing)
+exists(em_image_stringent)
+
+# Display the stringent image
+knitr::include_graphics(em_image_stringent)
+```
+
+![./output/em_results/CBD_vs_DMSO_stringent_network.png](./output/em_results/CBD_vs_DMSO_stringent_network.png)
+
+## Topological Analysis
+```{r get_size_of_network, eval=TRUE, warning=FALSE, message=FALSE}
+# Get the number of nodes and edges in the initial network
+num_nodes_initial <- RCy3::getNodeCount(
+    network = em_response_suid,
+    base.url = cyrest_url
+)
+num_edges_initial <- RCy3::getEdgeCount(
+    network = em_response_suid,
+    base.url = cyrest_url
+)
+
+# Get the number of nodes and edges in the stringent network
+num_nodes_stringent <- RCy3::getNodeCount(
+    network = em_response_stringent_suid,
+    base.url = cyrest_url
+)
+num_edges_stringent <- RCy3::getEdgeCount(
+    network = em_response_stringent_suid,
+    base.url = cyrest_url
+)
+```
+
+## Insights
+
+**1. Create an enrichment map.**
+
+*Pull images from `output/em_results`*
+
+**2. How many nodes and how many edges are in your enrichment map?**
+
+In the *initial network* that was constructed with `p = 1.0` and `q = 0.05`, there are `r num_nodes_initial` nodes and `r num_edges_initial` edges. In the *stringent network* that was constructed with `p = 1.0` and `q = 0.01`, there are `r num_nodes_stringent` nodes and `r num_edges_stringent` edges.
+
+**3. What thresholds did you use to create your enrichment map?**
+
+To create the enrichment map, I used the following thresholds:
+
+| Network Version | P-Value Threshold | Q-Value Threshold |
+|-----------------|-------------------|-------------------|
+| Initial         | 1.0               | 0.05              |
+| Stringent       | 1.0               | 0.01              |
+
+**4. What parameters did you use to annotate the network?**
+
+*TODO*
+
+**5. Create a publication ready figure.**
+
+*TODO*
+
+**6. Collapse your network to create a theme network.**
+
+*TODO*
+
+**7. What are the major themes present in this analysis? Do they fit with the model?**
+
+*TODO*
+
+**8. Are there any novel pathways or themes in this analysis?**
+
+*TODO*
+
+## Interpretation
+
+**1. Do the enrichment results support conclusions or mechanism discussed in the original paper?**
+
+*TODO*
+
+**2. Can you find other studies to support some of the results that you see? How does this evidence support your result?**
+
+*TODO*
+
+# References
+::: {#refs}
+:::
