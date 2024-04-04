@@ -62,6 +62,12 @@ if (!dir.exists("output")) {
 }
 output_dir <- paste0(getwd(), "/output")
 
+# Create the DE output directory if it doesn't exist
+if (!dir.exists(file.path(output_dir, "de_results"))) {
+    dir.create(file.path(output_dir, "de_results"))
+}
+de_output_dir <- file.path(output_dir, "de_results")
+
 # Create the EM output directory if it doesn't exist
 if (!dir.exists(file.path(output_dir, "em_results"))) {
     dir.create(file.path(output_dir, "em_results"))
@@ -273,9 +279,18 @@ legend(
 
 We examined the differential expression between CBD-treated and DMSO-treated healthy A549 cells. The analysis was performed using the `edgeR` package in R. The results were visualized using a volcano plot (below) with highlights on three genes mentioned in the original publication: ATF6, EIF2AK3, and ERN1.
 
-## Volcano Plot
+```{r volcano_plot, fig.cap="Volcano plot of the differential expression analysis", out.width="100%", echo=FALSE, warning=FALSE, error=FALSE}
+# Fetch the volcano plot from GitHub if it doesn't exist
+if (!file.exists(file.path(de_output_dir, "volcano_plot.svg"))) {
+    download.file(
+        url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/blob/main/Assignment%202/volcano_plot.svg",
+        destfile = file.path(de_output_dir, "volcano_plot.svg")
+    )
+}
 
-<!-- TODO -->
+# Display the volcano plot
+knitr::include_graphics(c(paste0("./output/", "de_results/volcano_plot.svg")))
+```
 
 # Thresholded Enrichment Analysis (Over-representation Analysis) {.tabset .tabset-fade}
 
@@ -913,7 +928,7 @@ knitr::include_graphics(
 )
 ```
 
-## Topological Analysis
+## Initial Analysis
 
 After creating both our enrichment maps, we can now examine some basic statistics of the size of each to see how thresholds affect the network.
 ```{r get_size_of_network, eval=TRUE, warning=FALSE, message=FALSE}
