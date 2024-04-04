@@ -7,13 +7,8 @@ bibliography: A3_Ashenafee.bib
 output:
     html_document:
         toc: true
-        toc_float: true
         number_sections: false
-        theme: journal
-        highlight: tango
         code_folding: hide
-        df_print: paged
-        self_contained: no
 csl: cse.csl
 nocite: '@*'
 ---
@@ -509,9 +504,17 @@ knitr::kable(
 
 **4. Compare the results of this non-thresholded analysis to the thresholded analysis performed in Assignment 2.**
 
+<!-- Display ORA and GSEA top5 results here and discuss if the pathways are the same. If not, discuss if the general themes are the same. -->
+
 <!-- TODO -->
 
 **5. Is comparing a non-thresholded vs. a thresholded analysis straightforward? Why or why not?**
+
+It's not a straightforward comparison because in a GSEA analysis, all of the genes in the initial DE results are factored. On the other hand, the ORA only accounts for the significantly upregulated/downregulated genes. This means we lose out on a lot of information in the pathways that are shown as the output.
+
+For example, a non-significantly expressed gene could be part of a pathway that is significantly affected by the treatment.
+
+Overall, ORA results only factor in genes that are expressed beyond a threshold, whereas GSEA factors in everything in the dataset. This makes it difficult to compare the two analyses directly.
 
 <!-- TODO -->
 
@@ -840,7 +843,7 @@ em_response_stringent_suid <- em_response_stringent$network
 ```
 
 
-```{r export_enrichment_map, eval=TRUE, warning=FALSE, message=FALSE}
+```{r export_enrichment_map, eval=TRUE, warning=FALSE, message=FALSE, fig.align="center"}
 # Function to export the enrichment map as an image
 #
 # Args:
@@ -897,16 +900,22 @@ em_image_stringent <- file.path(
     paste0(em_analysis_name, "_stringent_network.png")
 )
 
-# TODO: Fix check for if image exists (this checks for wrong thing)
-exists(em_image_stringent)
+# Check if the image exists
+if (!file.exists(em_image_stringent)) {
+    stop("The stringent EM image does not exist. Please check the output/em_results directory.")
+}
 
 # Display the stringent image
-knitr::include_graphics(em_image_stringent)
+knitr::include_graphics(
+    paste0(
+        "./output/", "em_results/", em_analysis_name, "_stringent_network.png"
+    )
+)
 ```
 
-![./output/em_results/CBD_vs_DMSO_stringent_network.png](./output/em_results/CBD_vs_DMSO_stringent_network.png)
-
 ## Topological Analysis
+
+After creating both our enrichment maps, we can now examine some basic statistics of the size of each to see how thresholds affect the network.
 ```{r get_size_of_network, eval=TRUE, warning=FALSE, message=FALSE}
 # Get the number of nodes and edges in the initial network
 num_nodes_initial <- RCy3::getNodeCount(
@@ -927,13 +936,97 @@ num_edges_stringent <- RCy3::getEdgeCount(
     network = em_response_stringent_suid,
     base.url = cyrest_url
 )
+
+# Output the results
+knitr::kable(
+    data.frame(
+        Network = c("Initial", "Stringent"),
+        NumNodes = c(num_nodes_initial, num_nodes_stringent),
+        NumEdges = c(num_edges_initial, num_edges_stringent)
+    ),
+    caption = "Size of the Enrichment Maps."
+)
+```
+
+## Annotating the Enrichment Map
+
+To add more information to the visual, we will annotate the map using the `AutoAnnotate` app available in Cytoscape [@Kucera2016]. Specifically, the annotation will use the `annotate-clusterBoosted` method.
+
+```{r annotate_enrichment_map, eval=TRUE, warning=FALSE, message=FALSE}
+# Function to annotate the current enrichment map using the provided cyrest_url
+#
+# Args:
+#   current_base: The base URL of the Cytoscape REST API
+#
+# Returns:
+#   The response from the Cytoscape REST API
+annotate_enrichment_map <- function(current_base) {
+    # Annotate the network
+    response <- RCy3::commandsGET(
+        paste(
+            "autoannotate annotate-clusterBoosted",
+            "network=current",
+            sep = " "
+        ),
+        base.url = current_base
+    )
+
+    return(response)
+}
+
+# Function to summarize the current enrichment map using the provided cyrest_url
+#
+# Args:
+#   current_base: The base URL of the Cytoscape REST API
+#
+# Returns:
+#   The response from the Cytoscape REST API
+summarize_enrichment_map <- function(current_base) {
+    # Annotate the network
+    response <- RCy3::commandsGET(
+        paste(
+            "autoannotate summary",
+            "network=current",
+            sep = " "
+        ),
+        base.url = current_base
+    )
+
+    return(response)
+}
+
+# Annotate and summarize the initial network
+annotated_network <- annotate_enrichment_map(cyrest_url)
+
+# export_enrichment_map(
+#     cyrest_url,
+#     paste0(em_analysis_name, "_annotated_network.png"),
+#     em_output_dir
+# )
+
+annotated_network <- summarize_enrichment_map(cyrest_url)
+annotated_network <- annotate_enrichment_map(cyrest_url)
+
+# export_enrichment_map(
+#     cyrest_url,
+#     paste0(em_analysis_name, "_annotated_theme_network.svg"),
+#     em_output_dir
+# )
 ```
 
 ## Insights
 
 **1. Create an enrichment map.**
 
-*Pull images from `output/em_results`*
+I created two enrichment maps with different thresholds because I wanted to see the effects that tuning thresholds would have, in comparison to the default values.
+
+```{r show_initial_map, echo=FALSE, warning=FALSE, error=FALSE, out.width = "100%", fig.show='hold', fig.cap="Initial Enrichment Map of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD (p = 1.0, q = 0.05)"}
+knitr::include_graphics(c("output/em_results/CBD_vs_DMSO_initial_network.png"))
+```
+
+```{r show_stringent_map, echo=FALSE, warning=FALSE, error=FALSE, out.width = "100%", fig.show='hold', fig.cap="Stringent Enrichment Map of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD (p = 1.0, q = 0.01)"}
+knitr::include_graphics(c("output/em_results/CBD_vs_DMSO_stringent_network.png"))
+```
 
 **2. How many nodes and how many edges are in your enrichment map?**
 
@@ -950,9 +1043,28 @@ To create the enrichment map, I used the following thresholds:
 
 **4. What parameters did you use to annotate the network?**
 
-*TODO*
+For annotation, I used [AutoAnnotate](https://autoannotate.readthedocs.io/en/latest/index.html) because of how simple it is to use and integrate into the Cytoscape workflow [@Kucera2016]. For the annotations, I ran both the `autoannotate annotate-clusterBoosted` and `autoannotate annotate-sizeSorted` commands to compare the output, but decided to proceed with just `autoannotate annotate-clusterBoosted`.
+
+For the `autoannotate annotate-clusterBoosted` command, I used the default parameters:
+
+- `adjacentWordBonus`: 8
+- `clusterAlgorithm`: MCL
+- `maxWords`: 3
+- `minWordOccurrence`: 1
+
+My annotated figures are below.
+
+```{r show_annotated_map, echo=FALSE, warning=FALSE, error=FALSE, out.width = "100%", fig.show='hold', fig.cap="Annotated Enrichment Map of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD (p = 1.0, q = 0.01)"}
+knitr::include_graphics(c("output/em_results/CBD_vs_DMSO_annotated_network.png"))
+```
+
+```{r show_annotated_theme_map, echo=FALSE, warning=FALSE, error=FALSE, out.width = "100%", fig.show='hold', fig.cap="Annotated Enrichment Map of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD (p = 1.0, q = 0.01)"}
+knitr::include_graphics(c("output/em_results/CBD_vs_DMSO_annotated_theme_network.svg"))
+```
 
 **5. Create a publication ready figure.**
+
+The figure below is in `.svg` format to allow for easy editing and scaling, which is often used for publication-quality networks.
 
 *TODO*
 
