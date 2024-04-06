@@ -846,7 +846,7 @@ em_response <- create_enrichment_map(
 )
 em_response_suid <- em_response$network
 
-# 2. More Stringent EM (p = 1.0, q = 0.01)
+# 2. More Stringent EM (p = 1.0, q = 0.05)
 em_analysis_name_stringent <- paste0(em_analysis_name, "_stringent")
 em_response_stringent <- create_enrichment_map(
     em_analysis_name_stringent, pvalue_gsea_threshold, 0.01,
@@ -908,11 +908,11 @@ export_enrichment_map <- function(
 # Fetch the images from the output/em_results folder
 em_image <- file.path(
     em_output_dir,
-    paste0(em_analysis_name, "_initial_network.png")
+    paste0(em_analysis_name, "_initial_network.svg")
 )
 em_image_stringent <- file.path(
     em_output_dir,
-    paste0(em_analysis_name, "_stringent_network.png")
+    paste0(em_analysis_name, "_stringent_network.svg")
 )
 
 # Check if the image exists
@@ -923,7 +923,7 @@ if (!file.exists(em_image_stringent)) {
 # Display the stringent image
 knitr::include_graphics(
     paste0(
-        "./output/", "em_results/", em_analysis_name, "_stringent_network.png"
+        "./output/", "em_results/", em_analysis_name, "_stringent_network.svg"
     )
 )
 ```
@@ -956,18 +956,20 @@ num_edges_stringent <- RCy3::getEdgeCount(
 knitr::kable(
     data.frame(
         Network = c("Initial", "Stringent"),
-        NumNodes = c(num_nodes_initial, num_nodes_stringent),
-        NumEdges = c(num_edges_initial, num_edges_stringent)
+        Nodes = c(num_nodes_initial, num_nodes_stringent),
+        Edges = c(num_edges_initial, num_edges_stringent)
     ),
     caption = "Size of the Enrichment Maps."
 )
 ```
 
+Notice that after setting a more stringent threshold, we see that relatively few terms remain, along with their regulation status. It is interesting that there is a great number of downregulated terms, possibly indicating that CBD treatment has a greater effect in downregulation.
+
 ## Annotating the Enrichment Map
 
-To add more information to the visual, we will annotate the map using the `AutoAnnotate` app available in Cytoscape [@Kucera2016]. Specifically, the annotation will use the `annotate-clusterBoosted` method.
+To add more information to the visual, we will annotate the map using the `AutoAnnotate` app available in Cytoscape [@Kucera2016]. Specifically, the annotation will use the `annotate-clusterBoosted` method. As a baseline annotation effort, we first summarized the stringent network and then ran `autoannotate` on it, giving the following figure.
 
-```{r annotate_enrichment_map, eval=TRUE, warning=FALSE, message=FALSE}
+```{r annotate_enrichment_map, eval=TRUE, warning=FALSE, message=FALSE, fig.align="center"}
 # Function to annotate the current enrichment map using the provided cyrest_url
 #
 # Args:
@@ -1010,23 +1012,374 @@ summarize_enrichment_map <- function(current_base) {
     return(response)
 }
 
-# Annotate and summarize the initial network
+# Annotate and summarize the network
 annotated_network <- annotate_enrichment_map(cyrest_url)
-
-# export_enrichment_map(
-#     cyrest_url,
-#     paste0(em_analysis_name, "_annotated_network.png"),
-#     em_output_dir
-# )
-
 annotated_network <- summarize_enrichment_map(cyrest_url)
-annotated_network <- annotate_enrichment_map(cyrest_url)
 
-# export_enrichment_map(
-#     cyrest_url,
-#     paste0(em_analysis_name, "_annotated_theme_network.svg"),
-#     em_output_dir
-# )
+# Load the image and display it
+em_image <- file.path(
+    em_output_dir,
+    paste0(em_analysis_name, "_baseline_annotated_network.svg")
+)
+knitr::include_graphics(em_image)
+```
+
+Before continuing further analysis we will remove the nodes that are not connected to any other nodes in the network. This will help us focus on the most relevant pathways in the network that have several of their components modified through treatment. To accomplish this, we will use the `filter` command in Cytoscape, and set this filter to only select the nodes that are within a distance of 3 of a node with a degree of 3 or more.
+
+```{r filter_the_em, eval=TRUE, warning=FALSE, message=FALSE}
+# Create a filter to limit the number of nodes.
+#
+# Args:
+#   current_base: The base URL of the Cytoscape REST API
+#   filter_json: The JSON specifying the filter
+#   filter_name: The name of the filter
+#   apply: A logical value indicating whether to apply the filter
+#
+# Returns:
+#   The name of the filter
+create_filter <- function(
+    current_base, filter_json, filter_name, apply = TRUE
+) {
+
+    # Create the request body
+    req_body <- jsonlite::toJSON(
+        list(
+            json = jsonlite::toJSON(filter_json, auto_unbox = TRUE),
+            name = filter_name,
+            apply = apply
+        ),
+        auto_unbox = TRUE
+    )
+
+    # Create the filter
+    r <- httr::POST(
+        url = paste0(
+            current_base,
+            "/commands",
+            "/filter",
+            "/create"
+        ),
+        body = jsonlite::fromJSON(req_body),
+        encode = "json",
+        handle = NULL
+    )
+
+    # Check the status of the response
+    if (r$status != 200) {
+        stop(sprintf("Failed to create filter: Code %s", r$status))
+    }
+
+    return(filter_name)
+}
+
+# Grab the SUIDs of the selected nodes
+#
+# Args:
+#   current_base: The base URL of the Cytoscape REST API
+#
+# Returns:
+#   The SUIDs of the selected nodes
+get_node_suids <- function(current_base) {
+
+    # Create the request body
+    req_body <- jsonlite::toJSON(
+        list(
+            nodeList = "selected"
+        ),
+        auto_unbox = TRUE
+    )
+
+    # Create the filter
+    r <- httr::POST(
+        url = paste0(
+            current_base,
+            "/commands",
+            "/node",
+            "/list"
+        ),
+        body = jsonlite::fromJSON(req_body),
+        encode = "json",
+        handle = NULL
+    )
+
+
+    # Check the status of the response
+    if (r$status != 200) {
+        stop(sprintf("Failed to create filter: Code %s", r$status))
+    }
+
+    # Parse the response
+    selected_nodes <- jsonlite::fromJSON(httr::content(r, "text"))
+
+    return(selected_nodes)
+}
+
+# Grab the specified properties of the nodes
+#
+# Args:
+#   current_base: The base URL of the Cytoscape REST API
+#   properties: The properties to get
+#   selected: Whether to query selected nodes or not
+#
+# Returns:
+#   The properties of the selected nodes
+get_node_properties <- function(current_base, properties, selected) {
+
+    # Concatenate the properties vector into one string for query
+    properties_str <- paste(properties, collapse = ", ")
+
+    # Specify which group of nodes to query
+    node_group <- ifelse(selected, "selected", "all")
+
+    # Create the request body
+    req_body <- jsonlite::toJSON(
+        list(
+            nodeList = node_group,
+            propertyList = properties_str
+        ),
+        auto_unbox = TRUE
+    )
+
+    # Create the filter
+    r <- httr::POST(
+        url = paste0(
+            current_base,
+            "/commands",
+            "/node",
+            "/get%20properties"
+        ),
+        body = jsonlite::fromJSON(req_body),
+        encode = "json",
+        handle = NULL
+    )
+
+    # Check the status of the response
+    if (r$status != 200) {
+        stop(sprintf("Failed to create filter: Code %s", r$status))
+    }
+
+    # Parse the response
+    selected_nodes <- jsonlite::fromJSON(httr::content(r, "text"))
+
+    return(selected_nodes)
+}
+
+# Parse the properties of the nodes into a data frame
+#
+# Args:
+#   properties_list: The list of properties
+#
+# Returns:
+#   A data frame with the properties of the nodes
+parse_node_properties <- function(properties_list) {
+    # Initialize the data frame
+    node_properties_df <- data.frame()
+
+    # Iterate over the properties
+    for (i in seq_len(nrow(properties_list))) {
+
+        # Get the SUID of the current node
+        node_suid <- properties_list[i, ]$SUID
+
+        # Select the properties for the given node
+        curr_properties <- properties_list[i, ]$visualProperties
+        curr_properties <- curr_properties[[1]]
+
+        # Create a new row for the data frame
+        new_row <- t(data.frame(curr_properties))
+        rownames(new_row) <- NULL
+        colnames(new_row) <- new_row[1, ]
+        new_row <- new_row[2, ]
+
+        # Add the SUID to the new row
+        new_row$SUID <- node_suid
+
+        # Add the new row to the data frame
+        node_properties_df <- rbind(node_properties_df, new_row)
+    }
+
+    return(node_properties_df)
+}
+
+# Modify the network layout to clean it up
+RCy3::layoutNetwork(layout.name="force-directed", base.url=cyrest_url)
+
+# Define the filter JSON
+filter_json <- list(
+    id = "CompositeFilter",
+    parameters = list(
+        type = "ALL"
+    ),
+    transformers = list(
+        list(
+            id = "TopologyFilter",
+            parameters = list(
+                predicate = "GREATER_THAN_OR_EQUAL",
+                distance = 3,
+                threshold = 3,
+                type = "ALL"
+            ),
+            transformers = list()
+        )
+    )
+)
+
+# Create the filter
+filter_response <- create_filter(cyrest_url, filter_json, "limitnodes", TRUE)
+```
+
+By filtering, we can see which terms pass our filter and are likely deeply connected to other terms in the network. To fetch these terms, we will look up the `Label` property of each term in our filter.
+
+```{r fetch_properties, eval=TRUE, warning=FALSE, message=FALSE}
+# Get the SUIDs of the selected nodes
+node_suids <- get_node_suids(cyrest_url)
+node_suids <- node_suids$data$nodes
+
+# Specify the properties to fetch
+properties <- c("Label", "Fill Color", "X Location", "Y Location", "Size")
+node_properties <- get_node_properties(cyrest_url, properties, TRUE)
+
+# Parse the properties into a data frame
+node_properties_df <- parse_node_properties(node_properties$data)
+
+# Use the colour to determine the regulation
+node_properties_df$Regulation <- ifelse(
+    node_properties_df$NODE_FILL_COLOR == "#2166AC",
+    "Downregulated",
+    "Upregulated"
+)
+
+# Sort the data frame by the Regulation column
+node_properties_df <- node_properties_df[order(node_properties_df$Regulation, decreasing = TRUE), ]
+rownames(node_properties_df) <- NULL
+
+# Output the table
+knitr::kable(
+    node_properties_df[c("SUID", "NODE_LABEL", "Regulation")],
+    caption = "Selected nodes in the Enrichment Map."
+)
+```
+
+## Creating a Theme EM
+
+With some initial exploration on which terms based the thresholding and the filtering, we will complete building the enrichment map by creating a theme EM. This will involve collapsing the network to create a more concise visual representation of the network.
+
+```{r create_theme_enrichment_map, eval=TRUE, warning=FALSE, message=FALSE}
+# Function to collapse the current enrichment map using the provided cyrest_url
+#
+# Args:
+#   current_base: The base URL of the Cytoscape REST API
+#
+# Returns:
+#   The response from the Cytoscape REST API
+collapse_enrichment_map <- function(current_base) {
+    # Annotate the network
+    response <- RCy3::commandsGET(
+        paste(
+            "autoannotate collapse",
+            "network=current",
+            sep = " "
+        ),
+        base.url = current_base
+    )
+
+    return(response)
+}
+
+# Collapse the network
+annotated_network <- collapse_enrichment_map(cyrest_url)
+
+# Define the properties to fetch
+properties <- c("Label", "Fill Color")
+node_properties <- get_node_properties(cyrest_url, properties, FALSE)
+collapsed_node_df <- parse_node_properties(node_properties$data)
+
+# Select all non-grey nodes
+RCy3::selectNodes(
+    collapsed_node_df[collapsed_node_df$NODE_FILL_COLOR != "#F0F0F0", ]$SUID,
+    base.url = cyrest_url
+)
+
+# Hide the selected nodes
+RCy3::hideSelectedNodes(base.url = cyrest_url)
+
+# Only keep the #F0F0F0 nodes
+collapsed_node_df <- collapsed_node_df[
+    collapsed_node_df$NODE_FILL_COLOR == "#F0F0F0", ]
+rownames(collapsed_node_df) <- NULL
+
+RCy3::createDegreeFilter(
+    "disconnected",
+    c(0, 0),
+    base.url = cyrest_url,
+    apply = TRUE
+)
+
+# Hide the disconnected nodes
+RCy3::hideSelectedNodes(base.url = cyrest_url)
+
+# Select the "apc mediated degredation" node
+noi <- RCy3::selectNodes(
+    collapsed_node_df[collapsed_node_df$NODE_LABEL == "apc mediated degradation", ]$SUID,
+    base.url = cyrest_url
+)
+# Change the fill color of the selected node
+RCy3::setNodePropertyBypass(
+    node.names = noi$nodes,
+    new.values = "#C3E88D",
+    visual.property = "Fill Color",
+    base.url = cyrest_url
+)
+
+# Add annotation to the network
+RCy3::addAnnotationBoundedText(
+    "Collapsed Nodes",
+    200,
+    -100,
+    24,
+    0.0,
+    base.url = cyrest_url
+)
+RCy3::commandsPOST(
+    paste("annotation add shape", "type=circle", "x=200", "y=-50", "width=20", "height=20", "fillColor=#F0F0F0", "canvas=background", "view=CURRENT", sep=" "),
+    base.url = cyrest_url
+)
+RCy3::addAnnotationText(
+    "A collapsed node.",
+    230,
+    -50,
+    24,
+    0.0,
+    base.url = cyrest_url
+)
+RCy3::commandsPOST(
+    paste("annotation add shape", "type=circle", "x=200", "y=0", "width=20", "height=20", "fillColor=#C3E88D", "canvas=background", "view=CURRENT", sep=" "),
+    base.url = cyrest_url
+)
+RCy3::addAnnotationText(
+    "Term-of-interest",
+    230,
+    0,
+    24,
+    0.0,
+    base.url = cyrest_url
+)
+RCy3::fitContent(base.url = cyrest_url)
+
+# Load the image
+em_image <- file.path(
+    em_output_dir,
+    "CBDI_vs_CBDH_annotated_theme_network_pub.svg"
+)
+
+# Display the image
+knitr::include_graphics(em_image)
+
+# Display the table of the collapsed nodes
+knitr::kable(
+    collapsed_node_df[c("SUID", "NODE_LABEL")],
+    caption = "Collapsed nodes in the Enrichment Map."
+)
 ```
 
 ## Insights
@@ -1035,26 +1388,26 @@ annotated_network <- annotate_enrichment_map(cyrest_url)
 
 I created two enrichment maps with different thresholds because I wanted to see the effects that tuning thresholds would have, in comparison to the default values.
 
-```{r show_initial_map, echo=FALSE, warning=FALSE, error=FALSE, out.width = "100%", fig.show='hold', fig.cap="Initial Enrichment Map of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD (p = 1.0, q = 0.05)"}
+```{r show_initial_map, echo=FALSE, warning=FALSE, error=FALSE, out.width = "100%", fig.show='hold', fig.cap="Initial Enrichment Map of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD (p = 1.0, q = 0.05, similarity = 0.375)"}
 knitr::include_graphics(c("output/em_results/CBD_vs_DMSO_initial_network.png"))
 ```
 
-```{r show_stringent_map, echo=FALSE, warning=FALSE, error=FALSE, out.width = "100%", fig.show='hold', fig.cap="Stringent Enrichment Map of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD (p = 1.0, q = 0.01)"}
-knitr::include_graphics(c("output/em_results/CBD_vs_DMSO_stringent_network.png"))
+```{r show_stringent_map, echo=FALSE, warning=FALSE, error=FALSE, out.width = "100%", fig.show='hold', fig.cap="Stringent Enrichment Map of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD (p = 1.0, q = 0.01, similarity = 0.375)"}
+knitr::include_graphics(c("output/em_results/CBD_vs_DMSO_stringent_network.svg"))
 ```
 
 **2. How many nodes and how many edges are in your enrichment map?**
 
-In the *initial network* that was constructed with `p = 1.0` and `q = 0.05`, there are `r num_nodes_initial` nodes and `r num_edges_initial` edges. In the *stringent network* that was constructed with `p = 1.0` and `q = 0.01`, there are `r num_nodes_stringent` nodes and `r num_edges_stringent` edges.
+The *initial network* has `r num_nodes_initial` nodes and `r num_edges_initial` edges. On the other hand, the *stringent network* has `r num_nodes_stringent` nodes and `r num_edges_stringent` edges.
 
 **3. What thresholds did you use to create your enrichment map?**
 
 To create the enrichment map, I used the following thresholds:
 
-| Network Version | P-Value Threshold | Q-Value Threshold |
-|-----------------|-------------------|-------------------|
-| Initial         | 1.0               | 0.05              |
-| Stringent       | 1.0               | 0.01              |
+| Network Version | P-Value Threshold | Q-Value Threshold | Similarity Threshold |
+|-----------------|-------------------|-------------------|----------------------|
+| Initial         | 1.0               | 0.05              | 0.375                |
+| Stringent       | 1.0               | 0.01              | 0.375                |
 
 **4. What parameters did you use to annotate the network?**
 
@@ -1069,27 +1422,36 @@ For the `autoannotate annotate-clusterBoosted` command, I used the default param
 
 My annotated figures are below.
 
-```{r show_annotated_map, echo=FALSE, warning=FALSE, error=FALSE, out.width = "100%", fig.show='hold', fig.cap="Annotated Enrichment Map of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD (p = 1.0, q = 0.01)"}
+```{r show_annotated_map, echo=FALSE, warning=FALSE, error=FALSE, out.width = "100%", fig.show='hold', fig.cap="Initial Annotated Enrichment Map of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD (p = 1.0, q = 0.05)"}
 knitr::include_graphics(c("output/em_results/CBD_vs_DMSO_annotated_network.png"))
 ```
 
-```{r show_annotated_theme_map, echo=FALSE, warning=FALSE, error=FALSE, out.width = "100%", fig.show='hold', fig.cap="Annotated Enrichment Map of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD (p = 1.0, q = 0.01)"}
+```{r show_annotated_theme_map, echo=FALSE, warning=FALSE, error=FALSE, out.width = "100%", fig.show='hold', fig.cap="More Stringently Annotated Enrichment Map of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD (p = 1.0, q = 0.01)"}
 knitr::include_graphics(c("output/em_results/CBD_vs_DMSO_annotated_theme_network.svg"))
 ```
 
 **5. Create a publication ready figure.**
 
-The figure below is in `.svg` format to allow for easy editing and scaling, which is often used for publication-quality networks.
+An issue with the figures above is that there is no clear theme due to the size of the network and all the distinct groupings. To address this, we can focus on a subset of the network that focuses on one of the major themes. With a more focused network, we can also consider additions like a legend which would be necessary for something that's publication-level. The figure below is in `.svg` format to allow for easy editing and scaling, which is often used for publication-quality networks.
 
-*TODO*
+```{r show_theme_map, echo=FALSE, warning=FALSE, error=FALSE, out.width = "100%", fig.show='hold', fig.cap="Annotated Theme Network of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD (p = 1.0, q = 0.01)"}
+knitr::include_graphics(c("output/em_results/CBDI_vs_CBDH_annotated_theme_network_pub.svg"))
+```
+
+Note tha this figure was generated via automating Cytoscape through CyREST. Unfortunately, the *apc mediated degredation* node is not highlighted in this figure as the automation would not change the `Fill Color` property of the node, but be aware that this node is the "theme of interest".
 
 **6. Collapse your network to create a theme network.**
 
-*TODO*
+See Above.
 
 **7. What are the major themes present in this analysis? Do they fit with the model?**
 
-*TODO*
+```{r show_themes, eval=TRUE, warning=FALSE, message=FALSE}
+knitr::kable(
+    collapsed_node_df[c("SUID", "NODE_LABEL")],
+    caption = "Collapsed nodes in the Enrichment Map."
+)
+```
 
 **8. Are there any novel pathways or themes in this analysis?**
 
@@ -1099,9 +1461,13 @@ The figure below is in `.svg` format to allow for easy editing and scaling, whic
 
 **1. Do the enrichment results support conclusions or mechanism discussed in the original paper?**
 
-*TODO*
+One of the key findings of this analysis and inspecting the final EM is that the **apc mediated degredation** pathway forms the largest cluster of related terms. The original publication does *not* outwardly discuss this pathway or the role of antigen-presenting cells (APCs), however, it is generally known that APCs play a crucial role in the immune response to infection- be it pathogenic or tumor-related [@Rastogi2022].
+
+This outcome *does* support what was initially discussed in the publication
 
 **2. Can you find other studies to support some of the results that you see? How does this evidence support your result?**
+
+One article discusses the mechanisms of the mRNA vaccines from different pharma companies during the COVID-19 pandemic, and it explains how the vaccine acts in relation to other phenomena. A key portion that connects to the idea of *apc mediated degredation* is their mention of how t
 
 *TODO*
 
