@@ -1,0 +1,2 @@
+"","query","significant","p_value","term_size","query_size","intersection_size","precision","recall","term_id","source","term_name","effective_domain_size","source_order","parents"
+"3","down",TRUE,4.94886042054265e-18,215,554,43,0.0776173285198556,0.2,"GO:0000819","GO:BP","sister chromatid segregation",16178,239,

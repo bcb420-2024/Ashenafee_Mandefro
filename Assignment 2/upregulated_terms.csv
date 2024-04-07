@@ -1,0 +1,2 @@
+"","query","significant","p_value","term_size","query_size","intersection_size","precision","recall","term_id","source","term_name","effective_domain_size","source_order","parents"
+"6694","up",TRUE,5.02968998028432e-10,434,1291,78,0.0604182804027885,0.179723502304147,"GO:0045596","GO:BP","negative regulation of cell differentiation",16178,11843,
