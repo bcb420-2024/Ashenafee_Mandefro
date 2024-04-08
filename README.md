@@ -13,8 +13,8 @@ Below is a table of my assignments and the link to both the RMarkdown document a
 | Assignment | Topic                          | Links |
 | ---------- | ------------------------------ | ----- |
 | A1         | Dataset Selection & Processing | [RMarkdown](https://github.com/bcb420-2024/Ashenafee_Mandefro/blob/main/Assignment%201/A1_Notebook.Rmd) \| [HTML](https://github.com/bcb420-2024/Ashenafee_Mandefro/blob/main/Assignment%201/A1_Notebook.html) |
-| A2         | DE Analysis & Preliminary ORA  | [RMarkdown](https://github.com/bcb420-2024/Ashenafee_Mandefro/blob/main/A2_Ashenafee.Rmd) \| [HTML](https://github.com/bcb420-2024/Ashenafee_Mandefro/blob/main/A2_Ashenafee.html) |
-| A3         | GSEA & Pathway Enrichment      | [RMarkdown](#) \| [HTML](#) |
+| A2         | DE Analysis & Preliminary ORA  | [RMarkdown]([https://github.com/bcb420-2024/Ashenafee_Mandefro/blob/main/A2_Ashenafee.Rmd](https://github.com/bcb420-2024/Ashenafee_Mandefro/blob/main/Assignment%202/A2_Notebook.Rmd)) \| [HTML](https://github.com/bcb420-2024/Ashenafee_Mandefro/blob/main/Assignment%202/A2_Notebook.html) |
+| A3         | GSEA & Pathway Enrichment      | [RMarkdown](https://github.com/bcb420-2024/Ashenafee_Mandefro/blob/main/Assignment_3/A3_Ashenafee.Rmd) \| [HTML](https://github.com/bcb420-2024/Ashenafee_Mandefro/blob/main/Assignment_3/A3_Ashenafee.html) |
 
 # Homework
 
