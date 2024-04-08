@@ -2,22 +2,23 @@
 title: "Assignment 3"
 subtitle: "Non-thresholded GSEA and Network Visualization of CBD Treatment for SARS-CoV-2 Infection"
 author: "Ashenafee Mandefro"
-date: "04/01/2024"
+date: "4/07/2024"
 bibliography: A3_Ashenafee.bib
 output:
-    html_document:
-        toc: true
-        number_sections: false
-        code_folding: hide
+    bookdown::html_document2
 csl: cse.csl
 nocite: '@*'
 ---
 
 <!-- R Setup -->
-```{r install_dependencies, eval = TRUE, message = FALSE}
+```{r install_dependencies, eval = TRUE, message = FALSE, echo = FALSE}
 # Check if Biocondutor is installed
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
+
+# Install bookdown
+if (!requireNamespace("bookdown", quietly = TRUE))
+    install.packages("bookdown")
 
 # Install knitr
 if (!requireNamespace("knitr", quietly = TRUE))
@@ -37,7 +38,7 @@ if (!requireNamespace("RCy3", quietly = TRUE))
 ```
 
 <!-- Setup Directories -->
-```{r setup_directories, eval=TRUE, warning=FALSE, message=FALSE}
+```{r setup_directories, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 # Create the data directory if it doesn't exist
 if (!dir.exists("data")) {
     dir.create("data")
@@ -50,23 +51,23 @@ if (!dir.exists("downloads")) {
 }
 downloads_dir <- paste0(getwd(), "/downloads")
 
-# Create the RData directory in the downloads directory if it doesn't exist
-if (!dir.exists(file.path(downloads_dir, "RData"))) {
-    dir.create(file.path(downloads_dir, "RData"))
+# Create the RData directory in the data directory if it doesn't exist
+if (!dir.exists(file.path(data_dir, "RData"))) {
+    dir.create(file.path(data_dir, "RData"))
 }
-rdata_dir <- file.path(downloads_dir, "RData")
+rdata_dir <- file.path(data_dir, "RData")
+
+# Create the csv directory in the data directory if it doesn't exist
+if (!dir.exists(file.path(data_dir, "csv"))) {
+    dir.create(file.path(data_dir, "csv"))
+}
+csv_dir <- file.path(data_dir, "csv")
 
 # Create the output directory if it doesn't exist
 if (!dir.exists("output")) {
     dir.create("output")
 }
 output_dir <- paste0(getwd(), "/output")
-
-# Create the DE output directory if it doesn't exist
-if (!dir.exists(file.path(output_dir, "de_results"))) {
-    dir.create(file.path(output_dir, "de_results"))
-}
-de_output_dir <- file.path(output_dir, "de_results")
 
 # Create the EM output directory if it doesn't exist
 if (!dir.exists(file.path(output_dir, "em_results"))) {
@@ -76,7 +77,7 @@ em_output_dir <- file.path(output_dir, "em_results")
 ```
 
 <!-- Loading Data -->
-```{r load_data, eval=TRUE, warning=FALSE, message=FALSE}
+```{r load_data, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 # Download the .RData from GitHub
 download.file(
     url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Assignment%202/filtered_data_matrix.RData",
@@ -86,15 +87,49 @@ download.file(
     url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Assignment%202/samples_type.RData",
     destfile = paste0(rdata_dir, "/samples_type.RData")
 )
+
+# Download the .csv files from GitHub
 download.file(
-    url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Assignment%202/de_results.RData",
-    destfile = paste0(rdata_dir, "/de_results.RData")
+    url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Assignment%202/cbd_infect_vs_cbd_healthy.csv",
+    destfile = paste0(csv_dir, "/cbd_infect_vs_cbd_healthy.csv")
+)
+download.file(
+    url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Assignment%202/upregulated_terms.csv",
+    destfile = paste0(csv_dir, "/ora_upregulated_terms.csv")
+)
+download.file(
+    url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Assignment%202/downregulated_terms.csv",
+    destfile = paste0(csv_dir, "/ora_downregulated_terms.csv")
+)
+
+# Download the .svg files from GitHub
+download.file(
+    url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Assignment_3/CBD-Healthy_vs_CBD-Infect_annotated_legend_theme_network.svg",
+    destfile = paste0(em_output_dir, "/CBD-Healthy_vs_CBD-Infect_annotated_legend_theme_network.svg")
+)
+download.file(
+    url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Assignment_3/CBD-Healthy_vs_CBD-Infect_network.svg",
+    destfile = paste0(em_output_dir, "/CBD-Healthy_vs_CBD-Infect_network.svg")
+)
+download.file(
+    url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Assignment_3/CBD-Healthy_vs_CBD-Infect_summarized_annotated_network.svg",
+    destfile = paste0(em_output_dir, "/CBD-Healthy_vs_CBD-Infect_summarized_annotated_network.svg")
+)
+download.file(
+    url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Assignment_3/CBD-Healthy_vs_CBD-Infect_summarized_network.svg",
+    destfile = paste0(em_output_dir, "/CBD-Healthy_vs_CBD-Infect_summarized_network.svg")
 )
 
 # Load the RData files
 load(file.path(rdata_dir, "filtered_data_matrix.RData"))
 load(file.path(rdata_dir, "samples_type.RData"))
-load(file.path(rdata_dir, "de_results.RData"))
+
+# Load the csv files into data frames
+cbd_infect_vs_cbd_healthy <- read.csv(file.path(csv_dir, "cbd_infect_vs_cbd_healthy.csv"))
+rownames(cbd_infect_vs_cbd_healthy) <- cbd_infect_vs_cbd_healthy$X
+cbd_infect_vs_cbd_healthy <- cbd_infect_vs_cbd_healthy[, -1]
+upregulated_terms <- read.csv(file.path(csv_dir, "ora_upregulated_terms.csv"))
+downregulated_terms <- read.csv(file.path(csv_dir, "ora_downregulated_terms.csv"))
 
 # Define the log2 TPM
 lg2_tpm <- log2(filtered_data_matrix + 1)
@@ -110,7 +145,7 @@ expression_data <- file.path(data_dir, "lg2_tpm.tsv")
 ```
 
 <!-- Download the GSEA Executable -->
-```{r download_gsea, eval=TRUE, warning=FALSE, message=FALSE, results="hide"}
+```{r download_gsea, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 download_and_unzip_gsea <- function() {
     # Define the URL for the GSEA archive
     gsea_url <- "https://github.com/bcb420-2024/Ashenafee_Mandefro/raw/main/Executables/GSEA_4.3.3.zip"
@@ -150,6 +185,14 @@ if (!dir.exists(file.path(downloads_dir, "GSEA_4.3.3"))) {
 }
 ```
 
+<!-- Configuration -->
+```{r configuration, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
+# Set this to FALSE if not running in Docker
+is_docker <- TRUE
+
+analysis_name <- "CBD-Healthy_vs_CBD-Infect"
+```
+
 # Introduction
 
 ## Background {.tabset .tabset-fade}
@@ -160,7 +203,7 @@ A phytocannabinoid is a cannabinoid that occurs naturally in plants, such as Can
 
 ### Cannabidiol (CBD)
 
-Cannabidiol (CBD) is one of the numerous phytocannabinoids found in the Cannabis (Cannabis sativa) plant. However, it is not responsible for the "high" commonly associated with use of cannabis - that responsibility falls on delta-9 tetrohydrocannabinol (THC). CBD is a non-psychoactive compound, and has been shown to have a wide range of potential therapeutic properties, including anti-inflammatory, antioxidant, and neuroprotective effects [@atalayAntioxidativeAntiInflammatoryProperties2019; @cassanoCannabisSativaCannabidiol2020]. It has showed promise as a possible treatment for a variety of conditions, including epilepsy, anxiety, and chronic pain [@bonaccorsoCannabidiolCBDUse2019].
+Cannabidiol (CBD) is one of the numerous phytocannabinoids found in the Cannabis (Cannabis sativa) plant. However, it is not responsible for the "high" commonly associated with use of cannabis - that responsibility falls on delta-9 tetrohydrocannabinol (THC). CBD is a non-psychoactive compound, and has been shown to have a wide range of potential therapeutic properties, including anti-inflammatory, antioxidant, and neuroprotective effects [@Atalay2019; @Cassano2020]. It has showed promise as a possible treatment for a variety of conditions, including epilepsy, anxiety, and chronic pain [@Bonaccorso2019].
 
 ### SARS-CoV-2
 
@@ -170,29 +213,32 @@ A highly contagious virus, SARS-CoV-2 is the driving force behind the COVID-19 p
 
 ### Quick Summary of the Paper
 
-[Cannabidiol Inhibits SARS-CoV-2 Replication through Induction of the Host ER Stress and Innate Immune Responses](https://www.science.org/doi/10.1126/sciadv.abi6110) discusses the effects of CBD treatment in SARS-CoV-2 infected cells and mice, through its action of preventing replication of the virus. The researchers found that these effects are apparent in lung epithelial cells which is a critical finding, given that SARS-CoV-2 manifests itself with many respiratory issues[@nguyenCannabidiolInhibitsSARSCoV22022].
+[Cannabidiol Inhibits SARS-CoV-2 Replication through Induction of the Host ER Stress and Innate Immune Responses](https://www.science.org/doi/10.1126/sciadv.abi6110) discusses the effects of CBD treatment in SARS-CoV-2 infected cells and mice, through its action of preventing replication of the virus. The researchers found that these effects are apparent in lung epithelial cells which is a critical finding, given that SARS-CoV-2 manifests itself with many respiratory issues[@Nguyen2022].
 
 ### Data Overview
 
-The RNASeq data from this paper is available on the [Gene Expression Omnibus (GEO)](https://www.ncbi.nlm.nih.gov/geo/) under the accession number [GSE168797](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE168797). More information about the data is summarized in the table below:
+The RNASeq data from this paper is available on the [Gene Expression Omnibus (GEO)](https://www.ncbi.nlm.nih.gov/geo/) under the accession number [GSE168797](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE168797). More information about the data is summarized in Table \@ref(tab:data-info).
 
-| Attribute    | Value |
-|--------|-------|
-| Title  | Cannabidiol Inhibits SARS-CoV-2 Replication through Induction of the Host ER Stress and Innate Immune Responses   |
-| Organism | Homo sapiens |
-| Paper  | Nguyen, L. C., Yang, D., Nicolaescu, V., Best, T. J., Gula, H., Saxena, D., Gabbard, J. D., Chen, S. N., Ohtsuki, T., Friesen, J. B., Drayman, N., Mohamed, A., Dann, C., Silva, D., Robinson-Mailman, L., Valdespino, A., Stock, L., Suárez, E., Jones, K. A., Azizi, S. A., … Rosner, M. R. (2022). Cannabidiol inhibits SARS-CoV-2 replication through induction of the host ER stress and innate immune responses. Science advances, 8(8), eabi6110. https://doi.org/10.1126/sciadv.abi6110   |
-| Samples | 24 |
-| Status | Public on Jan 20, 2022   |
+```{r data-info, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
+dataset_info <- data.frame(
+    Attribute = c("Title", "Organism", "Paper", "Samples", "Status"),
+    Value = c("Cannabidiol Inhibits SARS-CoV-2 Replication through Induction of the Host ER Stress and Innate Immune Responses", "Homo sapiens", "Nguyen, L. C., Yang, D., Nicolaescu, V., Best, T. J., Gula, H., Saxena, D., Gabbard, J. D., Chen, S. N., Ohtsuki, T., Friesen, J. B., Drayman, N., Mohamed, A., Dann, C., Silva, D., Robinson-Mailman, L., Valdespino, A., Stock, L., Suárez, E., Jones, K. A., Azizi, S. A., … Rosner, M. R. (2022). Cannabidiol inhibits SARS-CoV-2 replication through induction of the host ER stress and innate immune responses. Science advances, 8(8), eabi6110. https://doi.org/10.1126/sciadv.abi6110", "24", "Public on Jan 20, 2022")
+)
 
-<!-- Include a brief introduction section with a summary of the normalization and scoring done in the first two assignments. Assume that the person reading the report has not read your assignment #1 or #2 report. Including basic statistics from that analysis will be helpful. (for example, data downloaded from GEO with id X, …) -->
+knitr::kable(
+    dataset_info,
+    format = "pipe",
+    caption = "Summary of the Cannabidiol as COVID Treatment RNASeq Data."
+)
+```
 
 # Data Preparation {.tabset .tabset-fade}
 
-The initial dataset from GEO had 57 832 genes, but after cleaning the dataset, we were left with 20 438 entries for subsequent analyses. The results of processing and normalization were visualized using a boxplot and a density plot to see the distribution of the data. These plots were constructed using the `ggplot2` R package.
+The initial dataset from GEO had 57 832 genes, but after cleaning the dataset, we were left with 20 438 entries for subsequent analyses. The results of processing and normalization were visualized using a boxplot (Figure \@ref(fig:boxplot)) and a density plot (Figure \@ref(fig:densityplot)) to see the distribution of the data. These plots were constructed using the `ggplot2` R package [@ggplot2].
 
 ## Boxplot
 
-```{r boxplot, fig.cap="Boxplot of the normalized data", fig.align="center", out.width="100%"}
+```{r boxplot, fig.cap = "Boxplot Showing the Distribution of the Normalized RNASeq Data", fig.align = "center", out.width = "100%", eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 # Define the log2 TPM
 lg2_tpm <- log2(filtered_data_matrix + 1)
 
@@ -241,7 +287,7 @@ legend(
 
 ## Density Plot
 
-```{r densityplot, fig.cap="Density plot of the normalized data", fig.align="center", out.width="100%"}
+```{r densityplot, fig.cap = "Density Plot Showing the Distribution of the Normalized RNASeq Data", fig.align = "center", out.width = "100%", eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 # Density plot
 counts_density <- apply(lg2_tpm, 2, density)
 xlim <- 0
@@ -259,7 +305,7 @@ plot(
     ylim = ylim,
     type = "n",
     ylab = "Smoothing density of log2-CPM",
-    main = "",
+    main = "Cannabidiol as COVID Treatment RNASeq Density Plot (Normalized)",
     cex.lab = 0.85
 )
 for (i in seq_along(counts_density)) {
@@ -277,59 +323,122 @@ legend(
 
 # Differential Expression Analysis
 
-We examined the differential expression between CBD-treated and DMSO-treated healthy A549 cells. The analysis was performed using the `edgeR` package in R. The results were visualized using a volcano plot (below) with highlights on three genes mentioned in the original publication: ATF6, EIF2AK3, and ERN1.
+We examined the differential expression between the healthy and SARS-CoV-2 infected A549 cells, where both groups were treated with CBD. The analysis was performed using the `edgeR` package in R [@edger]. The results were visualized using a volcano plot (Figure \@ref(fig:volcano-plot)) with highlights on three genes mentioned in the original publication: ATF6, EIF2AK3, and ERN1 [@Nguyen2022].
 
-```{r volcano_plot, fig.cap="Volcano plot of the differential expression analysis", out.width="100%", echo=FALSE, warning=FALSE, error=FALSE}
-# Fetch the volcano plot from GitHub if it doesn't exist
-if (!file.exists(file.path(de_output_dir, "volcano_plot.svg"))) {
-    download.file(
-        url = "https://github.com/bcb420-2024/Ashenafee_Mandefro/blob/main/Assignment%202/volcano_plot.svg",
-        destfile = file.path(de_output_dir, "volcano_plot.svg")
+```{r volcano-plot, fig.cap = "Volcano Plot of Differential Expression between Healthy vs. Infected A549 Cells Treated with CBD", fig.align = "center", out.width = "100%", eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
+# Define the genes of interest
+genes_of_interest <- c("ERN1", "EIF2AK3", "ATF6")
+
+# Create a data frame of the results
+results <- data.frame(
+    Gene = rownames(cbd_infect_vs_cbd_healthy),
+    logFC = cbd_infect_vs_cbd_healthy$logFC,
+    PValue = cbd_infect_vs_cbd_healthy$PValue,
+    FDR = cbd_infect_vs_cbd_healthy$FDR,
+    Significant = ifelse(
+        (cbd_infect_vs_cbd_healthy$FDR < 0.05) & abs(cbd_infect_vs_cbd_healthy$logFC) > 1,
+        "Significant",
+        "Not Significant"
+    ),
+    Interest = ifelse(
+        rownames(cbd_infect_vs_cbd_healthy) %in% genes_of_interest,
+        "Of Interest",
+        "Not of Interest"
+    ),
+    Regulation = ifelse(
+        (cbd_infect_vs_cbd_healthy$logFC > 1) & (cbd_infect_vs_cbd_healthy$FDR < 0.05),
+        "Upregulated",
+        ifelse(
+            (cbd_infect_vs_cbd_healthy$logFC < -1) & (cbd_infect_vs_cbd_healthy$FDR < 0.05),
+            "Downregulated",
+            "Not Significant"
+        )
     )
-}
+)
 
-# Display the volcano plot
-knitr::include_graphics(c(paste0("./output/", "de_results/volcano_plot.svg")))
+# Plot the volcano plot
+ggplot2::ggplot(
+    results,
+    ggplot2::aes(x = logFC, y = -log10(FDR), color = Regulation, shape = Interest)
+) +
+    ggplot2::geom_point(alpha = 0.5) +
+    ggplot2::geom_point(data = subset(results, Interest == "Of Interest"),
+                        ggplot2::aes(fill = Gene), alpha = 1.0, pch = 21) +
+    ggplot2::geom_hline(yintercept = -log10(0.05), linetype = "dashed") +
+    ggplot2::geom_vline(xintercept = c(-1, 1), linetype = "dashed") +
+    ggplot2::labs(
+        title = "Expression in Healthy vs. Infected A549 Cells Treated with CBD",
+        x = "Log2 Fold Change",
+        y = "-log10 FDR",
+        color = "Significance",
+        fill = "Gene",
+        shape = "Gene of Interest"
+    ) +
+    ggplot2::scale_color_manual(values = c("Upregulated" = "red", "Downregulated" = "hotpink", "Not Significant" = "grey")) +
+    ggplot2::scale_fill_manual(values = c("ERN1" = "purple", "EIF2AK3" = "cyan", "ATF6" = "green")) +
+    ggplot2::scale_shape_manual(values = c(16, 17)) +
+    ggplot2::theme_minimal()
 ```
 
 # Thresholded Enrichment Analysis (Over-representation Analysis) {.tabset .tabset-fade}
 
-To examine the biological processes that either have increased or decreased activity from the treatment, we performed an over-representation analysis (ORA) using the `gprofiler2` R package. This method of analysis used a list of the significantly up- and down-regulated genes from the previous DE analysis which passed the the adjusted p-value threshold of 0.05. The results of this analysis gave us insight into which pathways were most affected through the CBD treatment.
+To examine the biological processes that either have increased or decreased activity from the treatment, we performed an over-representation analysis (ORA) using the `gprofiler2` R package [@gprofiler2]. This method of analysis used a list of the significantly up- and down-regulated genes from the previous DE analysis which passed the adjusted p-value threshold of 0.05. The results of this analysis gave us insight into which pathways were most affected through the CBD treatment.
 
-The ORA was ran three times with differing input lists to compare and contrast the results of providing `gprofiler2` with up-regulated genes, down-regulated genes, and both up and downregulated genes.
+The ORA was ran three times with differing input lists to compare and contrast the results of providing `gprofiler2` with up-regulated terms, down-regulated terms, and both up and downregulated terms. We display the top 10 results from the upregulation (Table \@ref(tab:upregulated-terms)), and downregulation (Table \@ref(tab:downregulated-terms)) analyses.
 
-## Upregulated Genes
-
-```{r upregulated_genes, eval=TRUE, warning=FALSE, message=FALSE}
+```{r ora_setup, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
+cols_to_show <- c("term_id", "term_name", "p_value", "intersection_size", "term_size")
 ```
 
-## Downregulated Genes
+## Upregulated Pathways
 
-```{r downregulated_genes, eval=TRUE, warning=FALSE, message=FALSE}
+```{r upregulated-terms, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
+# Sort the upregulated terms by FDR
+upregulated_terms <- upregulated_terms[order(upregulated_terms$p_value), ]
+
+# Display the top 10 upregulated terms
+knitr::kable(
+    head(upregulated_terms[, cols_to_show], 10),
+    caption = "Top 10 upregulated pathways from the differential expression analysis."
+)
 ```
 
-## Both Up and Downregulated Genes
+## Downregulated Pathways
 
-```{r both_up_downregulated_genes, eval=TRUE, warning=FALSE, message=FALSE}
+```{r downregulated-terms, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
+# Sort the downregulated terms by FDR
+downregulated_terms <- downregulated_terms[order(downregulated_terms$p_value), ]
+
+# Display the top 10 downregulated terms
+knitr::kable(
+    head(downregulated_terms[, cols_to_show], 10),
+    caption = "Top 10 downregulated pathways from the differential expression analysis."
+)
 ```
 
 # Non-thresholded Enrichment Analysis (Gene Set Enrichment Analysis)
 
-Given that we have <!-- TODO: Number of non-significantly expressed genes --> genes that were neither significantly upregulated or downregulated, we can perform a gene set enrichment analysis (GSEA) to identify the pathways that may be further affected by this group of genes.
+We have `r sum(results$Significant == "Not Significant")` genes that were neither significantly upregulated or downregulated; that is `r round(sum(results$Significant == "Not Significant") / nrow(results), 4) * 100`% of the total genes.
 
-Since GSEA operates under the assumption of microarray data, we must apply some transformations to our data to specify the rank of each gene. The equation for this transformation is below:
-$$\text{Rank} = -\log_{10}(p) \times \text{sign}(LFC)$$
+Given this large proportion of genes we do not gain information from via the ORA, we likely miss out on highlighting several biological processes that may be affected by these genes. To combat this, we will perform a gene set enrichment analysis (GSEA) to identify the pathways that may be further affected by this group of genes [@Subramanian2005].
+
+Since GSEA operates under the assumption of microarray data, we must apply some transformations (given by Equation \@ref(eq:rank)) to our data to specify the rank of each gene.
+
+\begin{equation}
+    \text{Rank} = -\log_{10}(p) \times \text{sign}(LFC) (\#eq:rank)
+\end{equation}
+
 Where:
 
 - $p$ is the p-value of the gene
 
 - $LFC$ is the log fold change of the gene
 
-```{r rank_genes, eval=TRUE, warning=FALSE, message=FALSE}
+```{r rank-genes, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 # Create a data frame to store the ranks
 rank_df <- data.frame(
-    GeneName = rownames(de_results),
-    Rank = -log10(de_results$PValue) * sign(de_results$logFC)
+    GeneName = rownames(cbd_infect_vs_cbd_healthy),
+    Rank = -log10(cbd_infect_vs_cbd_healthy$PValue) * sign(cbd_infect_vs_cbd_healthy$logFC)
 )
 
 # Save the ranks to a file
@@ -339,19 +448,19 @@ write.table(rank_df, rank_file, sep = "\t", row.names = FALSE, quote = FALSE)
 
 ## Loading the Gene Sets from the Bader Lab
 
-GSEA comes with its own set of gene sets for the analysis, but they're not frequently updated (i.e., the sets are updated on a near-yearly basis) meaning that some information could be lost if its tied to a newer annotation. The `.gmt` from the Bader Lab contains more pathways and is updated on a monthly basis allowing for more information to be pulled.
+GSEA comes with its own set of gene sets for the analysis, but they're not frequently updated (i.e., the sets are updated on a near-yearly basis) meaning that some information could be lost if its tied to a newer annotation. The `.gmt` from the [Bader Lab](https://download.baderlab.org/) contains more pathways and is updated on a monthly basis allowing for more information to be pulled.
 
 For our purposes, we will be using the gene set that *does not* include inferred electronic annotations (IEAs).
 
-```{r load_gene_sets, eval=TRUE, warning=FALSE, message=FALSE}
+```{r load-gene-sets, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 download_gmt_file <- function(species) {
     # Base URL for the Bader Lab downloads website
     bader_url <- "https://download.baderlab.org/"
 
-    # URL that points to the latest release for the specified species
+    # URL that points to the March release of the gene sets
     gmt_url <- paste0(
         bader_url,
-        "EM_Genesets/current_release/",
+        "EM_Genesets/March_01_2024/",
         species,
         "/symbol/"
     )
@@ -407,18 +516,15 @@ We will proceed with using `r gmt_file` as our gene set file.
 
 We have downloaded the GSEA executable to `downloads/GSEA_X.X.X` (where `X.X.X` is the version number) and made reference to the entrypoint for the program in `gsea_executable`. Before we perform the GSEA, we must store reference to the relevant directories and files the analysis will be using.
 
-```{r setup_gsea, eval=TRUE, warning=FALSE, message=FALSE}
+```{r setup-gsea, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 # Create a directory for the GSEA results within the output directory
 gsea_output_dir <- file.path(output_dir, "gsea_results")
 if (!dir.exists(gsea_output_dir)) {
     dir.create(gsea_output_dir)
 }
 
-# Name the GSEA analysis
-gsea_analysis_name <- "CBD_vs_DMSO"
-
 # Define the input rank file
-rank_file <- file.path(data_dir, paste0(gsea_analysis_name, "_rank.rnk"))
+rank_file <- file.path(data_dir, paste0(analysis_name, "_rank.rnk"))
 
 # Define the GSEA command
 command <- sprintf(
@@ -426,19 +532,22 @@ command <- sprintf(
     shQuote(gsea_executable),
     shQuote(file.path(data_dir, gmt_file)),
     shQuote(rank_file),
-    shQuote(gsea_analysis_name),
+    shQuote(analysis_name),
     shQuote(gsea_output_dir)
 )
 ```
 
 With everything set up, we can now perform our GSEA.
 
-```{r run_gsea, eval=TRUE, warning=FALSE, message=FALSE}
+```{r run-gsea, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 # Check if results already exist
 gsea_result_folder <- list.files(gsea_output_dir)
 if (length(gsea_result_folder) == 0) {
     # Run the GSEA command
     system(command)
+
+    # Get the name of the GSEA results folder
+    gsea_result_folder <- list.files(gsea_output_dir)
 } else {
     message("GSEA results already exist.")
 }
@@ -450,7 +559,7 @@ gsea_files <- gsea_files[grep(".tsv", gsea_files)]
 
 ## GSEA Results
 
-```{r gsea_results, eval=TRUE, warning=FALSE, message=FALSE}
+```{r gsea-results, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 # Find the overall reports of the GSEA
 rx <- gregexpr("gsea_report_for_.*\\.tsv", gsea_files)
 gsea_report_files <- gsea_files[unlist(rx) > 0]
@@ -489,7 +598,7 @@ num_upreg_neg_pval_5 <- sum(na_neg_report$NOM.p.val < 0.05)
 
 **1. What method was used to perform the GSEA?**
 
-The GSEA was performed using version 4.3.3 of [GSEA for the command line](). This enrichment analysis was performed on the results of the differential expression analysis between CBD-treated and DMSO-treated healthy A549 cells. This data was transformed to create a rank file based on each gene's p-value and log fold change. The initial, raw RNASeq data was download from GEO with the accession number [GSE168797](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE168797).
+The GSEA was performed using version 4.3.3 of [GSEA for the command line](https://www.gsea-msigdb.org/gsea/index.jsp)[@Subramanian2005]. This enrichment analysis was performed on the results of the differential expression analysis examining the expression effects of CBD treatment on healthy versus SARS-CoV-2 infected A549 cells. This data was transformed to create a rank file based on each gene's p-value and log fold change. The initial, raw RNASeq data was download from GEO with the accession number [GSE168797](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE168797).
 
 **2. What gene sets did you use for your enrichment analysis?**
 
@@ -497,7 +606,7 @@ The gene set used for the enrichment analysis was obtained from the Bader Lab's 
 
 **3. Provide a summary of your enrichment results.**
 
-```{r gsea_summary, eval=TRUE, warning=FALSE, message=FALSE}
+```{r gsea-summary, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 # Create a data frame to store the summary
 gsea_summary <- data.frame(
     Condition = c("CBD_Infect", "CBD_Healthy"),
@@ -519,9 +628,50 @@ knitr::kable(
 
 **4. Compare the results of this non-thresholded analysis to the thresholded analysis performed in Assignment 2.**
 
-<!-- Display ORA and GSEA top5 results here and discuss if the pathways are the same. If not, discuss if the general themes are the same. -->
+```{r compare-ora-gsea, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
+# Display the top 5 terms from the ORA
+upregulated_terms_ora <- head(upregulated_terms, 5)
+downregulated_terms_ora <- head(downregulated_terms, 5)
 
-<!-- TODO -->
+# Display the top 5 terms from the GSEA (presorted by FDR)
+na_pos_report_top5 <- head(na_pos_report, 5)
+na_neg_report_top5 <- head(na_neg_report, 5)
+
+# Create data frames to store the top 5 terms from the ORA and GSEA
+ora_terms <- data.frame(
+    "Upregulated" = upregulated_terms_ora$term_name,
+    "Downregulated" = downregulated_terms_ora$term_name
+)
+
+gsea_terms <- data.frame(
+    "CBD_Infect" = na_pos_report_top5$NAME,
+    "CBD_Healthy" = na_neg_report_top5$NAME
+)
+
+# Modify the GSEA names to split by "%" and take only the first part (without using extra packages)
+gsea_terms <- data.frame(
+    "CBD_Infect" = sapply(strsplit(gsea_terms$CBD_Infect, "%"), "[[", 1),
+    "CBD_Healthy" = sapply(strsplit(gsea_terms$CBD_Healthy, "%"), "[[", 1)
+)
+```
+
+```{r show-ora-top-5, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
+# Display the top 5 terms from the ORA
+knitr::kable(
+    ora_terms,
+    format = "pipe",
+    caption = "Top 5 Terms from the ORA Results."
+)
+```
+
+```{r show-gsea-top-5, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
+# Display the top 5 terms from the GSEA
+knitr::kable(
+    gsea_terms,
+    format = "pipe",
+    caption = "Top 5 Terms from the GSEA Results."
+)
+```
 
 **5. Is comparing a non-thresholded vs. a thresholded analysis straightforward? Why or why not?**
 
@@ -531,24 +681,24 @@ For example, a non-significantly expressed gene could be part of a pathway that 
 
 Overall, ORA results only factor in genes that are expressed beyond a threshold, whereas GSEA factors in everything in the dataset. This makes it difficult to compare the two analyses directly.
 
-<!-- TODO -->
-
 # Visualization using Cytoscape
 
+We will use Cytoscape to create an enrichment map (EM) of our GSEA results. The enrichment map will allow us to visualize the relationships between the gene sets that were significantly enriched in our analysis.
 
 ## Enrichment Map Setup
 
-Prior to creating our enrichment map (EM), we will setup the thresholds for our analysis. The thresholds will allow us to filter out gene sets that aren't as significant as we need for analysis. We are using the following thresholds:
+Prior to creating our EM, we will setup the thresholds (Table \@ref(tab:em-threshold-setup)) for our analysis. The thresholds will allow us to filter out gene sets that aren't as significant as we need for analysis.
 
-```{r em_threshold_setup, eval=TRUE, warning=FALSE, message=FALSE}
+```{r em-threshold-setup, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 # Define the p-value threshold
 pvalue_gsea_threshold <- 1.0
 
 # Define the q-value threshold
 qvalue_gsea_threshold <- 0.05
 
-# Define the similarity threshold
+# Define the similarity threshold and metric
 similarity_threshold <- "0.375"
+similarity_metric <- "COMBINED"
 
 # Output the thresholds
 knitr::kable(
@@ -559,33 +709,10 @@ knitr::kable(
     ),
     caption = "Thresholds used for the Enrichment Map analysis."
 )
-
-#defined threshold for GSEA enrichments 
-#p-value to filter all the genesets.  For example -   1.0
-pvalue_gsea_threshold <- 1.0
-
-#q-value to filter all the genesets.  For example -   0.05
-qvalue_gsea_threshold <- 0.05
-
-#similarity threshold to filter all the genesets connections/edges.  
-# For example -   0.375
-similarity_threshold <- "0.375"
-
-#similarity metric to filter all the genesets connections/edges 
-# (can be OVERLAP, JACCARD, or COMBINED.   For example -   Combined
-similarity_metric = "COMBINED"
 ```
-The **p-value** threshold will ensure that only gene sets with a p-value of at most 1.0 will be included in the analysis. In a similar fashion, the **q-value** threshold is used to limit the gene sets in our analysis to those with $q-value < 0.05$.
+The **p-value** threshold will ensure that only gene sets with a p-value of at most 1.0 will be included in the analysis. In a similar fashion, the **q-value** threshold is used to limit the gene sets in our analysis to those with $q-value < 0.05$. The **similarity** threshold is used to filter out gene sets that are not similar enough to be connected in the enrichment map. The similarity metric used is **Combined**.
 
-```{r em_metric_definition, eval=TRUE, warning=FALSE, message=FALSE}
-# Define the similarity metric
-similarity_metric <- "COMBINED"
-```
-**TODO: Figure out similarity**
-
-The **similarity** threshold is used to filter out gene sets that are not similar enough to be connected in the enrichment map. The similarity metric used is **Combined**.
-
-```{r em_input_data_setup, eval=TRUE, warning=FALSE, message=FALSE}
+```{r em-input-data-setup, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 # Specify the location of the required files:
 #   - .gmt file
 #   - enrichment results
@@ -599,18 +726,15 @@ enrichment_results <- file.path(
 #   - ranks file
 em_expression_data <- shQuote(expression_data)
 ranks_file <- shQuote(rank_file)
-
-# Define the name of the analysis
-em_analysis_name <- "CBD_vs_DMSO"
 ```
 
 With the thresholds and input data set, we can now proceed with creating our EM.
 
 ## Using Cytoscape
 
-Our network analysis will be ran using Cytoscape and apps that are available through it. As a result, we must first ensure Cytoscape is running and that we can connect to it through its REST API (CyREST) before any analysis can be performed.
+Our network analysis will be ran using Cytoscape and apps that are available through it[@Shannon2003]. As a result, we must first ensure Cytoscape is running and that we can connect to it through its REST API (CyREST)[@Otasek2019].
 
-```{r connect_to_cytoscape, eval=TRUE, warning=FALSE, message=TRUE}
+```{r connect-to-cytoscape, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 # Function to ping Cytoscape using the provided cyrest_url
 #
 # Args:
@@ -631,8 +755,13 @@ ping_cytoscape <- function(cyrest_url) {
     return(result)
 }
 
-# Define the URL for accessing CyREST from Docker
-base_url <- "http://host.docker.internal:1234"
+# Define the URL for accessing CyREST
+if (is_docker) {
+    base_url <- "http://host.docker.internal:1234"
+} else {
+    base_url <- "http://localhost:1234"
+}
+
 cyrest_url <- paste0(base_url, "/v1")
 
 # Stop the analysis if Cytoscape is not running
@@ -645,6 +774,9 @@ if (!ping_cytoscape(cyrest_url)) {
         RCy3::cytoscapeVersionInfo(base.url = cyrest_url)["apiVersion"],
         RCy3::cytoscapeVersionInfo(base.url = cyrest_url)["cytoscapeVersion"]
     ))
+
+    # Clear the current session
+    RCy3::closeSession(save.before.closing = FALSE, base.url = cyrest_url)
 }
 ```
 
@@ -658,7 +790,7 @@ The EM is created through the `enrichmentmap` app available through the Cytoscap
 ### Installing Cytoscape Apps
 
 We use the `installApp` function provided by `RCy3` to install `EnrichmentMap` and `AutoAnnotate`.
-```{r install_cytoscape_apps, eval=TRUE, warning=FALSE, message=TRUE}
+```{r define-install-cytoscape-app-function, eval = TRUE, warning = FALSE, message = FALSE, echo = TRUE}
 # Wrapper function to install Cytoscape apps using RCy3
 #
 # Args:
@@ -685,7 +817,9 @@ install_cytoscape_apps <- function(cyrest_url, apps) {
 
     return(new_apps)
 }
+```
 
+```{r install-cytoscape-apps, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 # Install the required Cytoscape apps
 apps <- c("enrichmentmap", "autoannotate")
 installed_apps <- RCy3::getInstalledApps(base.url = cyrest_url)
@@ -708,7 +842,7 @@ To perform our analysis, we need to provide the following files to Cytoscape:
 - The ranks file.
 
 Since Cytoscape is running on the host operating system, we have to provide it with the input files that were generated in the Docker container. We will use the CyREST API to upload these files to Cytoscape.
-```{r upload_data_to_cytoscape, eval=TRUE, warning=FALSE, message=FALSE}
+```{r define-upload-data-to-cytoscape-function, eval = TRUE, warning = FALSE, message = FALSE, echo = TRUE}
 # Function to upload data to Cytoscape using the provided cyrest_url
 #
 # Args:
@@ -740,7 +874,9 @@ upload_data_to_cytoscape <- function(cyrest_url, files) {
 
     return(uploaded_paths)
 }
+```
 
+```{r upload-data-to-cytoscape, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 # Upload the required files to Cytoscape
 em_files <- c(gmt_file, enrichment_results, expression_data, rank_file)
 uploaded_files <- upload_data_to_cytoscape(base_url, em_files)
@@ -754,7 +890,7 @@ rank_file_host <- uploaded_files[4]
 
 ## Create the Enrichment Map
 
-With the Cytoscape Apps installed and the data imported, we can now move on to creating our EMs. We will create two EMs: one with a q-value threshold of 0.05 and another with a q-value threshold of 0.01. Both EMs will use a p-value threshold of 1.0.
+With the Cytoscape Apps installed and the data imported, we can now move on to creating our EMs. We will create two EMs: one with a q-value threshold of 0.05 (not shown) and another with a q-value threshold of 0.01 (Figure \@ref(fig:export-enrichment-map)). Both EMs will use a p-value threshold of 1.0.
 ```{r create_enrichment_map, eval=TRUE, warning=FALSE, message=FALSE}
 # Function to create an enrichment map using the provided cyrest_url
 #
@@ -839,17 +975,17 @@ create_enrichment_map <- function(
 
 # 1. Initial EM (p = 1.0, q = 0.05)
 em_response <- create_enrichment_map(
-    em_analysis_name, pvalue_gsea_threshold, qvalue_gsea_threshold,
+    analysis_name, pvalue_gsea_threshold, qvalue_gsea_threshold,
     similarity_threshold, similarity_metric, rank_file_host,
     enrichment_results_host, expression_data_host, gmt_file_host,
     cyrest_url
 )
 em_response_suid <- em_response$network
 
-# 2. More Stringent EM (p = 1.0, q = 0.05)
-em_analysis_name_stringent <- paste0(em_analysis_name, "_stringent")
+# 2. More Stringent EM (p = 1.0, q = 0.01)
+analysis_name_stringent <- paste0(analysis_name, "_stringent")
 em_response_stringent <- create_enrichment_map(
-    em_analysis_name_stringent, pvalue_gsea_threshold, 0.01,
+    analysis_name, pvalue_gsea_threshold, 0.01,
     similarity_threshold, similarity_metric, rank_file_host,
     enrichment_results_host, expression_data_host, gmt_file_host,
     cyrest_url
@@ -857,81 +993,42 @@ em_response_stringent <- create_enrichment_map(
 em_response_stringent_suid <- em_response_stringent$network
 ```
 
+Unfortunately using Docker, we cannot directly access the images of the networks we create in Cytoscape. This is because of the fundamental separation of filesystems between Docker and the host system. The issues will differ based on the function of `RCy3` used, but the reason behind said issues will be the same.
 
-```{r export_enrichment_map, eval=TRUE, warning=FALSE, message=FALSE, fig.align="center"}
-# Function to export the enrichment map as an image
-#
-# Args:
-#   current_base: The base URL of the Cytoscape REST API
-#   current_network_name: The name of the current network
-#   output_dir: The directory to save the image
-#
-# Returns:
-#   The response from the Cytoscape REST API
-export_enrichment_map <- function(
-    current_base, current_network_name, output_dir
-) {
-    # Fit the content
-    RCy3::fitContent(base.url = current_base)
-
-    # Create the full destination
-    output_file <- paste0(
-        output_dir, "/", current_network_name, ".png"
-    )
-
-    # Check to see if the file already exists
-    if (file.exists(output_file)) {
-        # Remove the file
-        file.remove(output_file)
-    }
-
-    # Export the image
-    response <- RCy3::exportImage(
-        output_file,
-        type = "png",
-        base.url = current_base
-    )
-
-    return(response)
-}
-
-# The export_enrichment_map function does not work because of the separation
-# between the host filesystem and Docker's filesystem. As a result, the image
-# for the EM will be fetched from the output/em_results folder since it cannot
-# be generated through this RMarkdown document.
-# export_enrichment_map(
-#     cyrest_url,
-#     paste0(em_analysis_name, "_initial_network.png"),
-#     em_output_dir
+- `RCy3::exportImage` will try to export the image in the current working directory (`r getwd()`), which is not accessible from the host system (and therefore Cytoscape).
+- `RCy3::commandsPOST` will try to save the image in the Cytoscape session directory, which is not accessible from this Docker container.
+```{r export-enrichment-map, fig.cap = "Enrichment Map of the GSEA results.", fig.align = "center", out.width = "100%", eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
+# Export an SVG image of the theme network
+# RCy3::commandsPOST(
+#     paste0("view export svg outputFile=", analysis_name, "_network.svg view=CURRENT"),
+#     base.url = cyrest_url
 # )
 
-# Fetch the images from the output/em_results folder
+# Fetch the image from the output/em_results folder
 em_image <- file.path(
     em_output_dir,
-    paste0(em_analysis_name, "_initial_network.svg")
-)
-em_image_stringent <- file.path(
-    em_output_dir,
-    paste0(em_analysis_name, "_stringent_network.svg")
+    paste0(analysis_name, "_network.svg")
 )
 
 # Check if the image exists
-if (!file.exists(em_image_stringent)) {
-    stop("The stringent EM image does not exist. Please check the output/em_results directory.")
+if (!file.exists(em_image)) {
+    stop("The EM image does not exist. Please check the output/em_results directory.")
 }
 
 # Display the stringent image
 knitr::include_graphics(
-    paste0(
-        "./output/", "em_results/", em_analysis_name, "_stringent_network.svg"
+    normalizePath(
+        paste0(
+            "output/", "em_results/", analysis_name, "_network.svg"
+        )
     )
 )
 ```
 
 ## Initial Analysis
 
-After creating both our enrichment maps, we can now examine some basic statistics of the size of each to see how thresholds affect the network.
-```{r get_size_of_network, eval=TRUE, warning=FALSE, message=FALSE}
+After creating two basic enrichment maps (Figure \@ref(fig:export-enrichment-map) shows the more stringent one), we can now examine some basic statistics of the size of each to see how thresholds affect the network.
+```{r get-size-of-network, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 # Get the number of nodes and edges in the initial network
 num_nodes_initial <- RCy3::getNodeCount(
     network = em_response_suid,
@@ -967,9 +1064,9 @@ Notice that after setting a more stringent threshold, we see that relatively few
 
 ## Annotating the Enrichment Map
 
-To add more information to the visual, we will annotate the map using the `AutoAnnotate` app available in Cytoscape [@Kucera2016]. Specifically, the annotation will use the `annotate-clusterBoosted` method. As a baseline annotation effort, we first summarized the stringent network and then ran `autoannotate` on it, giving the following figure.
+To add more information to the visual, we will annotate the map using the `AutoAnnotate` app available in Cytoscape [@Kucera2016]. Specifically, the annotation will use the `annotate-clusterBoosted` method. As a baseline annotation effort, we first summarized the stringent network and then ran `autoannotate` on it, yielding the annotated network shown in Figure \@ref(fig:annotate-enrichment-map).
 
-```{r annotate_enrichment_map, eval=TRUE, warning=FALSE, message=FALSE, fig.align="center"}
+```{r annotate-enrichment-map, fig.cap = "Annotated Enrichment Map of the GSEA results.", fig.align = "center", out.width = "100%", eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 # Function to annotate the current enrichment map using the provided cyrest_url
 #
 # Args:
@@ -1015,18 +1112,35 @@ summarize_enrichment_map <- function(current_base) {
 # Annotate and summarize the network
 annotated_network <- annotate_enrichment_map(cyrest_url)
 annotated_network <- summarize_enrichment_map(cyrest_url)
+# annotated_network <- annotate_enrichment_map(cyrest_url)
+# RCy3::fitContent(base.url = cyrest_url)
+
+# Modify the network layout to clean it up
+RCy3::layoutNetwork(layout.name = "force-directed", base.url = cyrest_url)
+
+# # Export an SVG image of the summarized network
+# RCy3::commandsPOST(
+#     paste0(
+#         "view export svg outputFile=",
+#         analysis_name,
+#         "_summarized_annotated_network.svg view=CURRENT"
+#     ),
+#     base.url = cyrest_url
+# )
 
 # Load the image and display it
 em_image <- file.path(
     em_output_dir,
-    paste0(em_analysis_name, "_baseline_annotated_network.svg")
+    paste0(analysis_name, "_summarized_annotated_network.svg")
 )
-knitr::include_graphics(em_image)
+knitr::include_graphics(
+    normalizePath(em_image)
+)
 ```
 
 Before continuing further analysis we will remove the nodes that are not connected to any other nodes in the network. This will help us focus on the most relevant pathways in the network that have several of their components modified through treatment. To accomplish this, we will use the `filter` command in Cytoscape, and set this filter to only select the nodes that are within a distance of 3 of a node with a degree of 3 or more.
 
-```{r filter_the_em, eval=TRUE, warning=FALSE, message=FALSE}
+```{r filter-the-em, eval = TRUE, warning = FALSE, message = FALSE, echo = TRUE}
 # Create a filter to limit the number of nodes.
 #
 # Args:
@@ -1201,9 +1315,6 @@ parse_node_properties <- function(properties_list) {
     return(node_properties_df)
 }
 
-# Modify the network layout to clean it up
-RCy3::layoutNetwork(layout.name="force-directed", base.url=cyrest_url)
-
 # Define the filter JSON
 filter_json <- list(
     id = "CompositeFilter",
@@ -1228,15 +1339,15 @@ filter_json <- list(
 filter_response <- create_filter(cyrest_url, filter_json, "limitnodes", TRUE)
 ```
 
-By filtering, we can see which terms pass our filter and are likely deeply connected to other terms in the network. To fetch these terms, we will look up the `Label` property of each term in our filter.
+By filtering, we can see which terms pass our filter and are likely deeply connected to other terms in the network. To fetch these terms (Table \@ref(tab:fetch-properties)), we will look up the `Label` property of each term in our filter.
 
-```{r fetch_properties, eval=TRUE, warning=FALSE, message=FALSE}
+```{r fetch-properties, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 # Get the SUIDs of the selected nodes
 node_suids <- get_node_suids(cyrest_url)
 node_suids <- node_suids$data$nodes
 
 # Specify the properties to fetch
-properties <- c("Label", "Fill Color", "X Location", "Y Location", "Size")
+properties <- c("Label", "Fill Color")
 node_properties <- get_node_properties(cyrest_url, properties, TRUE)
 
 # Parse the properties into a data frame
@@ -1264,7 +1375,7 @@ knitr::kable(
 
 With some initial exploration on which terms based the thresholding and the filtering, we will complete building the enrichment map by creating a theme EM. This will involve collapsing the network to create a more concise visual representation of the network.
 
-```{r create_theme_enrichment_map, eval=TRUE, warning=FALSE, message=FALSE}
+```{r create-theme-enrichment-map, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE, results = "hide"}
 # Function to collapse the current enrichment map using the provided cyrest_url
 #
 # Args:
@@ -1286,114 +1397,142 @@ collapse_enrichment_map <- function(current_base) {
     return(response)
 }
 
-# Collapse the network
-annotated_network <- collapse_enrichment_map(cyrest_url)
+# Create the theme network
+annotate_enrichment_map(cyrest_url)
+collapse_enrichment_map(cyrest_url)
+```
 
+```{r remove-unwanted-nodes, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 # Define the properties to fetch
+RCy3::clearSelection(base.url = cyrest_url)
 properties <- c("Label", "Fill Color")
 node_properties <- get_node_properties(cyrest_url, properties, FALSE)
 collapsed_node_df <- parse_node_properties(node_properties$data)
 
 # Select all non-grey nodes
-RCy3::selectNodes(
+x <- RCy3::selectNodes(
     collapsed_node_df[collapsed_node_df$NODE_FILL_COLOR != "#F0F0F0", ]$SUID,
     base.url = cyrest_url
 )
 
-# Hide the selected nodes
+# Hide the non-grey nodes and disconnected nodes
 RCy3::hideSelectedNodes(base.url = cyrest_url)
-
-# Only keep the #F0F0F0 nodes
-collapsed_node_df <- collapsed_node_df[
-    collapsed_node_df$NODE_FILL_COLOR == "#F0F0F0", ]
-rownames(collapsed_node_df) <- NULL
-
-RCy3::createDegreeFilter(
+RCy3::clearSelection(base.url = cyrest_url)
+x <- RCy3::createDegreeFilter(
     "disconnected",
     c(0, 0),
     base.url = cyrest_url,
     apply = TRUE
 )
-
-# Hide the disconnected nodes
 RCy3::hideSelectedNodes(base.url = cyrest_url)
+RCy3::clearSelection(base.url = cyrest_url)
 
+# Only keep the #F0F0F0 nodes
+suids <- collapsed_node_df[collapsed_node_df$NODE_FILL_COLOR == "#F0F0F0", ]$SUID
+
+# Change the layout to degree-circle
+RCy3::layoutNetwork(layout.name = "degree-circle", base.url = cyrest_url)
+
+# Fetch the labels of the remaining nodes
+# Weird Behaviour: Label for the remaining nodes keeps getting cleared only when
+# knitting...
+properties <- c("Label", "Fill Color")
+x <- RCy3::selectNodes(suids, base.url = cyrest_url)
+node_properties <- get_node_properties(cyrest_url, properties, TRUE)
+parsed_properties <- parse_node_properties(node_properties$data)
+
+knitr::kable(
+    parsed_properties,
+    caption = "Collapsed nodes in the Enrichment Map."
+)
+```
+
+```{r annotate-theme-network, fig.cap = "Theme Network of GSEA Results.", fig.align = "center", out.width = "100%", eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
 # Select the "apc mediated degredation" node
 noi <- RCy3::selectNodes(
-    collapsed_node_df[collapsed_node_df$NODE_LABEL == "apc mediated degradation", ]$SUID,
-    base.url = cyrest_url
-)
-# Change the fill color of the selected node
-RCy3::setNodePropertyBypass(
-    node.names = noi$nodes,
-    new.values = "#C3E88D",
-    visual.property = "Fill Color",
+    parsed_properties[parsed_properties$NODE_LABEL == "apc mediated degradation", ]$SUID,
+    preserve.current.selection = FALSE,
     base.url = cyrest_url
 )
 
+# Change the color of the selected node
+x <- RCy3::setNodePropertyBypass(
+    node.names = noi$nodes,
+    new.values = "#C3E88D",
+    network = "current",
+    visual.property = "NODE_FILL_COLOR",
+    base.url = cyrest_url
+)
+x <- RCy3::removeNodeCustomGraphics(
+    style.name = RCy3::getCurrentStyle(base.url = cyrest_url),
+    base.url = cyrest_url
+)
+x <- RCy3::clearSelection(base.url = cyrest_url)
+
 # Add annotation to the network
-RCy3::addAnnotationBoundedText(
-    "Collapsed Nodes",
-    200,
-    -100,
+x <- RCy3::addAnnotationBoundedText(
+    "Theme Network of GSEA Results",
+    -400,
+    250,
     24,
     0.0,
     base.url = cyrest_url
 )
-RCy3::commandsPOST(
-    paste("annotation add shape", "type=circle", "x=200", "y=-50", "width=20", "height=20", "fillColor=#F0F0F0", "canvas=background", "view=CURRENT", sep=" "),
+x <- RCy3::commandsPOST(
+    paste("annotation add shape", "type=ellipse", "x=220", "y=250", "width=20", "height=20", "fillColor=#F0F0F0", "canvas=background", "view=CURRENT", sep=" "),
     base.url = cyrest_url
 )
-RCy3::addAnnotationText(
-    "A collapsed node.",
-    230,
-    -50,
-    24,
+x <- RCy3::addAnnotationText(
+    "Theme",
+    250,
+    250,
+    16,
     0.0,
     base.url = cyrest_url
 )
-RCy3::commandsPOST(
-    paste("annotation add shape", "type=circle", "x=200", "y=0", "width=20", "height=20", "fillColor=#C3E88D", "canvas=background", "view=CURRENT", sep=" "),
+x <- RCy3::commandsPOST(
+    paste("annotation add shape", "type=ellipse", "x=220", "y=275", "width=20", "height=20", "fillColor=#C3E88D", "canvas=background", "view=CURRENT", sep=" "),
     base.url = cyrest_url
 )
-RCy3::addAnnotationText(
-    "Term-of-interest",
-    230,
-    0,
-    24,
+x <- RCy3::addAnnotationText(
+    "Main Theme",
+    250,
+    275,
+    16,
     0.0,
     base.url = cyrest_url
 )
-RCy3::fitContent(base.url = cyrest_url)
+x <- RCy3::fitContent(base.url = cyrest_url)
+
+# Export an SVG image of the theme network
+# RCy3::commandsPOST(
+#     paste0("view export svg outputFile=", analysis_name, "_annotated_legend_theme_network.svg view=CURRENT"),
+#     base.url = cyrest_url
+# )
 
 # Load the image
 em_image <- file.path(
     em_output_dir,
-    "CBDI_vs_CBDH_annotated_theme_network_pub.svg"
+    paste0(analysis_name, "_annotated_legend_theme_network.svg")
 )
 
 # Display the image
 knitr::include_graphics(em_image)
-
-# Display the table of the collapsed nodes
-knitr::kable(
-    collapsed_node_df[c("SUID", "NODE_LABEL")],
-    caption = "Collapsed nodes in the Enrichment Map."
-)
 ```
 
 ## Insights
 
 **1. Create an enrichment map.**
 
-I created two enrichment maps with different thresholds because I wanted to see the effects that tuning thresholds would have, in comparison to the default values.
+I created two enrichment maps with different thresholds because I wanted to see the effects that tuning thresholds would have, in comparison to the default values. The second enrichment map with more stringent thresholds is Figure \@ref(fig:export-enrichment-map), but is also shown below.
 
-```{r show_initial_map, echo=FALSE, warning=FALSE, error=FALSE, out.width = "100%", fig.show='hold', fig.cap="Initial Enrichment Map of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD (p = 1.0, q = 0.05, similarity = 0.375)"}
-knitr::include_graphics(c("output/em_results/CBD_vs_DMSO_initial_network.png"))
-```
+```{r show-stringent-map, echo=FALSE, warning=FALSE, error=FALSE, out.width = "100%", fig.show='hold', fig.cap="Stringent Enrichment Map of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD (p = 1.0, q = 0.01, similarity = 0.375)"}
+em_image <- file.path(
+    em_output_dir,
+    paste0(analysis_name, "_network.svg")
+)
 
-```{r show_stringent_map, echo=FALSE, warning=FALSE, error=FALSE, out.width = "100%", fig.show='hold', fig.cap="Stringent Enrichment Map of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD (p = 1.0, q = 0.01, similarity = 0.375)"}
-knitr::include_graphics(c("output/em_results/CBD_vs_DMSO_stringent_network.svg"))
+knitr::include_graphics(em_image)
 ```
 
 **2. How many nodes and how many edges are in your enrichment map?**
@@ -1402,7 +1541,7 @@ The *initial network* has `r num_nodes_initial` nodes and `r num_edges_initial` 
 
 **3. What thresholds did you use to create your enrichment map?**
 
-To create the enrichment map, I used the following thresholds:
+To create the enrichment maps, I used the following thresholds:
 
 | Network Version | P-Value Threshold | Q-Value Threshold | Similarity Threshold |
 |-----------------|-------------------|-------------------|----------------------|
@@ -1420,42 +1559,53 @@ For the `autoannotate annotate-clusterBoosted` command, I used the default param
 - `maxWords`: 3
 - `minWordOccurrence`: 1
 
-My annotated figures are below.
+The result of `autoannotate` is shown in Figure \@ref(fig:show-annotated-summary-map).
 
-```{r show_annotated_map, echo=FALSE, warning=FALSE, error=FALSE, out.width = "100%", fig.show='hold', fig.cap="Initial Annotated Enrichment Map of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD (p = 1.0, q = 0.05)"}
-knitr::include_graphics(c("output/em_results/CBD_vs_DMSO_annotated_network.png"))
-```
+```{r show-annotated-summary-map, fig.cap = "An Annotated Enrichment Map (Auto) of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD", fig.align = "center", out.width = "100%", eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
+em_image <- file.path(
+    em_output_dir,
+    paste0(analysis_name, "_summarized_annotated_network.svg")
+)
 
-```{r show_annotated_theme_map, echo=FALSE, warning=FALSE, error=FALSE, out.width = "100%", fig.show='hold', fig.cap="More Stringently Annotated Enrichment Map of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD (p = 1.0, q = 0.01)"}
-knitr::include_graphics(c("output/em_results/CBD_vs_DMSO_annotated_theme_network.svg"))
+knitr::include_graphics(em_image)
 ```
 
 **5. Create a publication ready figure.**
 
 An issue with the figures above is that there is no clear theme due to the size of the network and all the distinct groupings. To address this, we can focus on a subset of the network that focuses on one of the major themes. With a more focused network, we can also consider additions like a legend which would be necessary for something that's publication-level. The figure below is in `.svg` format to allow for easy editing and scaling, which is often used for publication-quality networks.
 
-```{r show_theme_map, echo=FALSE, warning=FALSE, error=FALSE, out.width = "100%", fig.show='hold', fig.cap="Annotated Theme Network of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD (p = 1.0, q = 0.01)"}
-knitr::include_graphics(c("output/em_results/CBDI_vs_CBDH_annotated_theme_network_pub.svg"))
+```{r show-publication-map, fig.cap = "Annotated (with legend) Theme Network of GSEA Results Comparing SARS-CoV-2-infected and Healthy ACE549 cells treated with CBD", fig.align = "center", out.width = "100%", eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
+em_image <- file.path(
+    em_output_dir,
+    paste0(analysis_name, "_annotated_legend_theme_network.svg")
+)
+
+knitr::include_graphics(em_image)
 ```
 
-Note tha this figure was generated via automating Cytoscape through CyREST. Unfortunately, the *apc mediated degredation* node is not highlighted in this figure as the automation would not change the `Fill Color` property of the node, but be aware that this node is the "theme of interest".
+Note that this figure was generated via automating Cytoscape through CyREST. The *apc mediated degredation* node was highlighted by using `RCy3::setNodePropertyBypass()` and `RCy3::removeNodeCustomGraphics()`, as it is the "theme of interest". However, this was not clearly mentioned in the documentation/resources for CyREST/Cytoscape, hence this automation was the result of trial and error (i.e., the property being `NODE_FILL_COLOR` instead of `Fill Color` in certain Cytoscape interfaces).
 
 **6. Collapse your network to create a theme network.**
 
-See Above.
+See Figure \@ref(fig:show-publication-map).
 
 **7. What are the major themes present in this analysis? Do they fit with the model?**
 
-```{r show_themes, eval=TRUE, warning=FALSE, message=FALSE}
-knitr::kable(
-    collapsed_node_df[c("SUID", "NODE_LABEL")],
-    caption = "Collapsed nodes in the Enrichment Map."
-)
+One of the major themes in Figure \@ref(fig:show-publication-map) is the *apc mediated degredation* pathway. In the condensed figure above, it has the most connections to the other nodes.
+
+<!-- The major themes in Figure \@ref(fig:show-publication-map) are below: -->
+
+```{r show-themes, eval = TRUE, warning = FALSE, message = FALSE, echo = FALSE}
+# knitr::kable(
+#     parsed_properties,
+#     caption = "Themes Closely Connected to the 'apc mediated degredation' Node."
+# )
 ```
+
 
 **8. Are there any novel pathways or themes in this analysis?**
 
-*TODO*
+None that are immediately apparent.
 
 ## Interpretation
 
@@ -1463,13 +1613,15 @@ knitr::kable(
 
 One of the key findings of this analysis and inspecting the final EM is that the **apc mediated degredation** pathway forms the largest cluster of related terms. The original publication does *not* outwardly discuss this pathway or the role of antigen-presenting cells (APCs), however, it is generally known that APCs play a crucial role in the immune response to infection- be it pathogenic or tumor-related [@Rastogi2022].
 
-This outcome *does* support what was initially discussed in the publication
+Furthermore, the publication discusses the role of the ER stress response, and how CBD has effects on genes that are enduced by this response [@Nguyen2022]. If cells undergo too much oxidative stress, they can undergo apoptosis. I believe that antigen-presenting cells may factor in this apoptosis/degradation, especially if CBD cannot exert its "early" prevention of SARS-CoV-2 on the cells, likely leading to that response as a result.
 
 **2. Can you find other studies to support some of the results that you see? How does this evidence support your result?**
 
-One article discusses the mechanisms of the mRNA vaccines from different pharma companies during the COVID-19 pandemic, and it explains how the vaccine acts in relation to other phenomena. A key portion that connects to the idea of *apc mediated degredation* is their mention of how t
+One article discusses the mechanisms of the mRNA vaccines from different pharma companies during the COVID-19 pandemic, and it explains how the vaccine acts in relation to other phenomena. A key portion that connects to the idea of *apc mediated degredation* is their mention of how the mRNA vaccines are taken up by APCs, leading to an immune response [@Rastogi2022]. I think this mechanism could support my previous interpretation in that the APC-induced response will lead to degredation of infected cells (possibly even those with the vaccine, despite it being attenuated).
 
-*TODO*
+# Post-Analysis
+
+...
 
 # References
 ::: {#refs}
